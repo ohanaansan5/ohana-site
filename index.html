@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Охана — Ивент-кафе в Ансане</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#0E0C0A;
+  --bg2:#161310;
+  --bg3:#1E1A16;
+  --card:#231F1A;
+  --border:rgba(255,255,255,.07);
+  --text:#F0EBE3;
+  --muted:#8A7F74;
+  --accent:#D4834A;
+  --accent-dim:rgba(212,131,74,.15);
+  --accent2:#5A8A5E;
+  --accent2-dim:rgba(90,138,94,.15);
+  --gold:#C8A96E;
+  --gold-dim:rgba(200,169,110,.12);
+  --rose:#B85E7A;
+  --rose-dim:rgba(184,94,122,.15);
+  --blue:#4A7FA8;
+  --blue-dim:rgba(74,127,168,.15);
+  --r:14px;
+  --r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;font-weight:300;line-height:1.7;min-height:100vh;overflow-x:hidden}
+
+/* ─── GRAIN OVERLAY ─── */
+body::before{content:'';position:fixed;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+/* ─── NAV ─── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;background:rgba(14,12,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;letter-spacing:.02em;color:var(--text);cursor:pointer}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:0}
+.nav-link{padding:10px 14px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border:none;background:none;transition:color .2s;white-space:nowrap}
+.nav-link:hover,.nav-link.active{color:var(--text)}
+.nav-cta{padding:8px 18px;background:var(--accent);color:#fff;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none;transition:opacity .2s;white-space:nowrap}
+.nav-cta:hover{opacity:.85}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:1.5px;background:var(--text);display:block;transition:all .3s}
+.mobile-menu{display:none;position:fixed;inset:60px 0 0;background:var(--bg2);z-index:99;flex-direction:column;padding:24px;gap:4px;overflow-y:auto}
+.mobile-menu.open{display:flex}
+.mob-link{padding:14px 0;font-size:14px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--border)}
+.mob-link:hover{color:var(--text)}
+
+/* ─── SECTIONS ─── */
+.section{display:none;min-height:calc(100vh - 60px);padding:80px 24px 60px}
+.section.active{display:block}
+.inner{max-width:900px;margin:0 auto}
+
+/* ─── HERO ─── */
+#s-home{padding:0;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 60% 40%,rgba(212,131,74,.08) 0%,transparent 70%)}
+.hero-wrap{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:100px 24px 60px;max-width:900px;margin:0 auto;position:relative;z-index:1}
+.hero-eyebrow{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.hero-eyebrow::after{content:'';flex:1;max-width:60px;height:1px;background:var(--accent)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(44px,8vw,86px);font-weight:700;line-height:1.0;margin-bottom:24px;letter-spacing:-.01em}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero-desc{font-size:clamp(14px,2vw,17px);color:var(--muted);max-width:520px;line-height:1.75;margin-bottom:40px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:60px}
+.btn-primary{padding:14px 28px;background:var(--accent);color:#fff;border-radius:99px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s}
+.btn-primary:hover{background:#c0722e}
+.btn-ghost{padding:14px 28px;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:99px;font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--text)}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:6px 14px;border-radius:99px;border:1px solid var(--border);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.hero-scroll{margin-top:48px;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.hero-scroll::before{content:'';width:30px;height:1px;background:var(--muted)}
+
+/* ─── INFO CARDS HOME ─── */
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.home-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s}
+.home-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px)}
+.home-card .hc-icon{font-size:24px;margin-bottom:12px}
+.home-card h3{font-size:14px;font-weight:600;margin-bottom:6px}
+.home-card p{font-size:12px;color:var(--muted);line-height:1.6}
+.home-card .hc-arrow{font-size:12px;color:var(--accent);margin-top:10px;display:block}
+
+/* ─── PAGE HEADER ─── */
+.page-header{margin-bottom:40px;padding-top:20px}
+.page-eyebrow{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,52px);font-weight:700;line-height:1.1;margin-bottom:8px}
+.page-title em{font-style:italic;color:var(--accent)}
+.page-desc{font-size:14px;color:var(--muted);max-width:560px;line-height:1.7}
+
+/* ─── EVENTS ─── */
+.events-grid{display:flex;flex-direction:column;gap:16px}
+.ev-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
+.ev-card:hover{border-color:rgba(255,255,255,.14)}
+.ev-top{display:flex;align-items:stretch}
+.ev-stripe{width:4px;flex-shrink:0}
+.ev-main{flex:1;padding:18px 20px;display:flex;gap:16px;align-items:flex-start}
+.ev-date-col{flex-shrink:0;text-align:center;min-width:52px}
+.ev-day{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1;color:var(--text)}
+.ev-mon{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ev-info{flex:1}
+.ev-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.ev-meta{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.ev-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.ev-footer{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ev-price{font-size:13px;font-weight:600;color:var(--text)}
+.ev-tag{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:500;letter-spacing:.04em}
+.ev-btn{margin-left:auto;padding:8px 18px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.04em;cursor:pointer;border:none;transition:all .2s}
+
+/* ─── MENU ─── */
+.menu-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.menu-cat{padding:8px 18px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:500;letter-spacing:.04em;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
+.menu-cat.active,.menu-cat:hover{background:var(--accent);color:#fff;border-color:transparent}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.menu-item-info h4{font-size:13px;font-weight:600;margin-bottom:3px}
+.menu-item-info p{font-size:12px;color:var(--muted);line-height:1.5}
+.menu-item-right{flex-shrink:0;text-align:right}
+.menu-price{font-size:14px;font-weight:700;color:var(--gold);white-space:nowrap}
+.menu-add{margin-top:6px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;margin-left:auto;transition:all .2s}
+.menu-add:hover{background:#c0722e;transform:scale(1.1)}
+.cart-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:14px 28px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 8px 32px rgba(212,131,74,.35);display:none;align-items:center;gap:12px;z-index:200;white-space:nowrap;border:none;transition:all .3s}
+.cart-bar.show{display:flex}
+.cart-count{background:rgba(255,255,255,.25);border-radius:99px;padding:2px 8px;font-size:11px}
+
+/* ─── BOOKING ─── */
+.booking-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.booking-type{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center}
+.booking-type:hover{border-color:rgba(255,255,255,.15)}
+.booking-type.selected{border-color:var(--accent)}
+.booking-type .bt-icon{font-size:28px;margin-bottom:10px}
+.booking-type h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.booking-type p{font-size:12px;color:var(--muted)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.form-control{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.form-control:focus{border-color:var(--accent)}
+.form-control option{background:var(--card)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.time-slots{display:flex;gap:8px;flex-wrap:wrap}
+.time-slot{padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;cursor:pointer;background:transparent;color:var(--text);transition:all .2s}
+.time-slot.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.time-slot.disabled{opacity:.35;cursor:default}
+.payment-info{background:var(--gold-dim);border:1px solid rgba(200,169,110,.2);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;font-size:13px;line-height:1.7}
+.payment-info strong{color:var(--gold)}
+.submit-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.submit-btn:hover{background:#c0722e}
+.submit-btn:disabled{opacity:.5;cursor:default}
+
+/* ─── TICKET MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:400px;width:100%;text-align:center;position:relative;animation:popIn .3s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:16px;right:16px;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+.ticket-icon{font-size:40px;margin-bottom:12px}
+.modal h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.modal .modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.qr-wrap{background:#fff;border-radius:12px;padding:16px;display:inline-block;margin-bottom:16px}
+.ticket-details{background:var(--card);border-radius:var(--r-sm);padding:14px;margin-bottom:20px;text-align:left}
+.td-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)}
+.td-row:last-child{border-bottom:none}
+.td-label{color:var(--muted)}
+.td-val{font-weight:500;color:var(--text)}
+.ticket-code{font-family:monospace;font-size:12px;color:var(--muted);margin-bottom:16px;letter-spacing:.05em}
+.modal-actions{display:flex;gap:8px}
+.modal-actions button{flex:1;padding:12px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.modal-btn-primary{background:var(--accent);color:#fff}
+.modal-btn-primary:hover{background:#c0722e}
+.modal-btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)!important;border:none}
+
+/* ─── SCANNER ─── */
+.scanner-wrap{max-width:440px;margin:0 auto}
+.scanner-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;text-align:center;margin-bottom:20px}
+.scanner-icon{font-size:48px;margin-bottom:16px}
+.scanner-box h3{font-size:18px;font-weight:600;margin-bottom:8px}
+.scanner-box p{font-size:13px;color:var(--muted);margin-bottom:20px}
+.code-input-wrap{display:flex;gap:10px}
+.code-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;color:var(--text);font-family:monospace;font-size:16px;letter-spacing:.1em;text-transform:uppercase;outline:none;text-align:center}
+.code-input:focus{border-color:var(--accent)}
+.scan-btn{padding:14px 20px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.scan-btn:hover{background:#c0722e}
+.scan-result{border-radius:var(--r);padding:20px;margin-top:16px;display:none}
+.scan-result.valid{background:rgba(90,138,94,.12);border:1px solid rgba(90,138,94,.3)}
+.scan-result.invalid{background:rgba(184,94,122,.12);border:1px solid rgba(184,94,122,.3)}
+.scan-result .sr-status{font-size:24px;margin-bottom:10px}
+.scan-result h3{font-size:16px;font-weight:600;margin-bottom:12px}
+.scan-result .sr-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)}
+.scan-result .sr-row:last-child{border-bottom:none}
+.scan-result .sr-label{color:var(--muted)}
+.mark-used-btn{width:100%;margin-top:14px;padding:12px;background:var(--accent2);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.mark-used-btn:hover{background:#4a7a4e}
+.recent-scans{margin-top:24px}
+.recent-scans h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--muted)}
+.scan-history{display:flex;flex-direction:column;gap:8px}
+.scan-hist-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.shi-left .shi-code{font-family:monospace;font-size:11px;color:var(--muted)}
+.shi-left .shi-name{font-weight:500}
+.shi-badge{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:600}
+.shi-badge.valid{background:var(--accent2-dim);color:var(--accent2)}
+.shi-badge.used{background:var(--gold-dim);color:var(--gold)}
+.shi-badge.invalid{background:var(--rose-dim);color:var(--rose)}
+
+/* ─── INFO ─── */
+.info-blocks{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:32px}
+.info-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.info-block h3{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.info-block p,.info-block li{font-size:13px;color:var(--muted);line-height:1.75}
+.info-block ul{list-style:none;padding:0}
+.info-block li::before{content:'—';margin-right:8px;color:var(--accent)}
+.rules-list{display:flex;flex-direction:column;gap:8px}
+.rule{display:flex;align-items:flex-start;gap:12px;font-size:13px;padding:10px 0;border-bottom:1px solid var(--border)}
+.rule:last-child{border-bottom:none}
+.rule-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.rule-text{color:var(--muted);line-height:1.5}
+.rule-text strong{color:var(--text)}
+.map-placeholder{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:40px 20px;text-align:center;margin-top:16px}
+.map-placeholder p{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* ─── UTILS ─── */
+.tag{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:600;letter-spacing:.04em}
+.tag-orange{background:var(--accent-dim);color:var(--accent)}
+.tag-green{background:var(--accent2-dim);color:var(--accent2)}
+.tag-gold{background:var(--gold-dim);color:var(--gold)}
+.tag-rose{background:var(--rose-dim);color:var(--rose)}
+.tag-blue{background:var(--blue-dim);color:var(--blue)}
+.divider{height:1px;background:var(--border);margin:32px 0}
+.success-box{background:var(--accent2-dim);border:1px solid rgba(90,138,94,.25);border-radius:var(--r);padding:20px;text-align:center}
+.success-box h3{font-size:16px;font-weight:600;margin-bottom:4px;color:var(--accent2)}
+.success-box p{font-size:13px;color:var(--muted)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:680px){
+  nav{padding:0 16px}
+  .nav-links,.nav-cta{display:none}
+  .hamburger{display:flex}
+  .home-grid{grid-template-columns:1fr}
+  .booking-grid{grid-template-columns:1fr}
+  .menu-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .info-blocks{grid-template-columns:1fr}
+  .section{padding:76px 16px 60px}
+}
+
+/* AUTH */
+.auth-wrap{max-width:420px;margin:0 auto}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px}
+.auth-tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
+.auth-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.auth-panel{display:none}.auth-panel.active{display:block}
+.staff-pin{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.pin-btn{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;font-size:18px;font-weight:600;cursor:pointer;color:var(--text);transition:all .2s;text-align:center;font-family:'Manrope',sans-serif}
+.pin-btn:hover{background:var(--bg3);border-color:var(--accent)}
+.pin-display{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px;text-align:center;font-size:28px;letter-spacing:.3em;margin-bottom:14px;min-height:54px;font-family:monospace}
+.cab-tabs{display:flex;gap:0;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:24px}
+.cab-tab{padding:10px 14px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;white-space:nowrap;letter-spacing:.04em}
+.cab-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.cab-panel{display:none}.cab-panel.active{display:block}
+.cab-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.cab-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.cab-user{display:flex;align-items:center;gap:12px}
+.cab-name{font-size:15px;font-weight:600}
+.cab-email{font-size:12px;color:var(--muted)}
+.logout-btn{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--rose-dim);color:var(--rose)}
+.ticket-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px;display:flex;transition:border-color .2s}
+.ticket-card:hover{border-color:rgba(255,255,255,.14)}
+.tc-stripe{width:5px;flex-shrink:0}
+.tc-body{flex:1;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.tc-info h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.tc-info p{font-size:12px;color:var(--muted);line-height:1.5}
+.tc-status{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:600;margin-top:6px;display:inline-block}
+.tc-qr-btn{padding:8px 16px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.tc-qr-btn:hover{background:var(--accent);color:#fff}
+.order-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.order-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
+.order-header h4{font-size:13px;font-weight:600}
+.order-items{font-size:12px;color:var(--muted);line-height:1.7}
+.order-total{font-size:13px;font-weight:600;color:var(--gold);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.dash-card .dc-label{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase}
+.dash-card .dc-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700}
+.dash-card .dc-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.dash-card.ok .dc-val{color:var(--accent2)}.dash-card.warn .dc-val{color:var(--gold)}.dash-card.hot .dc-val{color:var(--accent)}
+.order-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.or-left h4{font-size:13px;font-weight:600;margin-bottom:2px}
+.or-left p{font-size:12px;color:var(--muted)}
+.or-time{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--accent);white-space:nowrap}
+.or-status{font-size:10px;padding:4px 12px;border-radius:99px;font-weight:600;cursor:pointer;font-family:'Manrope',sans-serif}
+.guest-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.gr-name{font-size:13px;font-weight:500}
+.gr-event{font-size:11px;color:var(--muted);margin-top:2px}
+.rev-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.rev-label{font-size:12px;color:var(--muted);min-width:130px}
+.rev-bar-wrap{flex:1;background:var(--bg3);border-radius:99px;height:8px;overflow:hidden}
+.rev-bar{height:100%;border-radius:99px}
+.rev-val{font-size:12px;font-weight:600;min-width:70px;text-align:right}
+.staff-section{margin-bottom:24px}
+.staff-section>h3{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.badge-count{font-size:11px;background:var(--accent-dim);color:var(--accent);padding:2px 10px;border-radius:99px;font-weight:500}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:1.8}
+.empty-state .es-icon{font-size:36px;margin-bottom:12px}
+.info-note{background:var(--gold-dim);border:1px solid rgba(200,169,110,.2);border-radius:var(--r);padding:14px 18px;font-size:13px;line-height:1.7;margin-bottom:20px}
+.info-note strong{color:var(--gold)}
+@media(max-width:680px){.dash-grid{grid-template-columns:1fr 1fr}.tc-body{flex-direction:column;align-items:flex-start}}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showSection('home')">Оха<span>на</span></div>
+  <div class="nav-links">
+    <button class="nav-link" onclick="showSection('events')">Мероприятия</button>
+    <button class="nav-link" onclick="showSection('menu')">Меню</button>
+    <button class="nav-link" onclick="showSection('booking')">Бронь</button>
+    <button class="nav-link" onclick="showSection('info')">О нас</button>
+    </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button style="padding:8px 14px;background:transparent;border:1px solid var(--border);color:var(--accent);border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" id="nav-acc-btn" onclick="handleAccountNav()">👤 Войти</button>
+    <button class="nav-cta" onclick="showSection('booking')">Забронировать</button>
+  </div>
+  <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mob-link" onclick="showSection('home');toggleMenu()">Главная</div>
+  <div class="mob-link" onclick="showSection('events');toggleMenu()">Мероприятия</div>
+  <div class="mob-link" onclick="showSection('menu');toggleMenu()">Меню & Заказ</div>
+  <div class="mob-link" onclick="showSection('booking');toggleMenu()">Бронирование</div>
+  <div class="mob-link" onclick="showSection('info');toggleMenu()">О нас</div>
+  <div class="mob-link" onclick="handleAccountNav();toggleMenu()" style="color:var(--accent)">👤 Личный кабинет</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     HOME
+══════════════════════════════════════ -->
+<div class="section active" id="s-home">
+  <div class="hero-bg"></div>
+  <div class="hero-wrap">
+    <div class="hero-eyebrow">Ивент-кафе · Ансан, Корея</div>
+    <h1>Охана —<br>не место,<br>а <em>люди!</em></h1>
+    <p style="font-size:11px;color:var(--accent);letter-spacing:.14em;font-weight:600;margin-bottom:20px;text-transform:uppercase">— наш девиз</p>
+    <p class="hero-desc">Русскоязычное комьюнити-кафе с душой. Акустика, настолки, квизы, мастер-классы и исторический бал. Без алкоголя — безопасно для детей.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="showSection('events')">Ближайшие события</button>
+      <button class="btn-ghost" onclick="showSection('booking')">Забронировать место</button>
+    </div>
+    <div class="hero-badges">
+      <span class="badge">Без алкоголя</span>
+      <span class="badge">Безопасно для детей</span>
+      <span class="badge">Без мата</span>
+      <span class="badge">Русскоязычное комьюнити</span>
+    </div>
+    <div class="hero-scroll">Листай вниз</div>
+
+    <div class="home-grid" style="margin-top:64px">
+      <div class="home-card" onclick="showSection('events')">
+        <div class="hc-icon">🎭</div>
+        <h3>Мероприятия</h3>
+        <p>Акустика, бункер, квиз, дискотека, исторический бал — расписание и билеты.</p>
+        <span class="hc-arrow">Смотреть расписание →</span>
+      </div>
+      <div class="home-card" onclick="showSection('menu')">
+        <div class="hc-icon">☕</div>
+        <h3>Меню & Предзаказ</h3>
+        <p>Напитки от 4 000 ₩, домашняя выпечка — заказывай заранее и приходи готовым.</p>
+        <span class="hc-arrow">Открыть меню →</span>
+      </div>
+      <div class="home-card" onclick="showSection('booking')">
+        <div class="hc-icon">🪑</div>
+        <h3>Бронирование</h3>
+        <p>Зарезервируй стол, место на настолки или целый зал для частного события.</p>
+        <span class="hc-arrow">Забронировать →</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap">
+      <div><div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent)">Вт–Вс</div><div style="font-size:12px;color:var(--muted)">Работаем</div></div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent)">12:00</div><div style="font-size:12px;color:var(--muted)">Открываемся</div></div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent)">22–23:00</div><div style="font-size:12px;color:var(--muted)">Закрываемся (пт–сб до 23:00)</div></div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent)">70K ₩</div><div style="font-size:12px;color:var(--muted)">Аренда зала / час</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     EVENTS
+══════════════════════════════════════ -->
+<div class="section" id="s-events">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Афиша</div>
+      <h1 class="page-title">Ближайшие <em>события</em></h1>
+      <p class="page-desc">Билеты по предоплате — перевод на карту, затем QR-код на телефон. Показываешь на входе.</p>
+    </div>
+
+    <div class="events-grid" id="events-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MENU
+══════════════════════════════════════ -->
+<div class="section" id="s-menu">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Напитки и еда</div>
+      <h1 class="page-title">Наше <em>меню</em></h1>
+      <p class="page-desc">Добавляй в корзину заранее — скажи код заказа на кассе, и всё будет готово. Минимальный заказ 4 000 ₩.</p>
+    </div>
+
+    <div class="menu-cats">
+      <button class="menu-cat active" onclick="filterMenu('all',this)">Всё</button>
+      <button class="menu-cat" onclick="filterMenu('coffee',this)">Кофе</button>
+      <button class="menu-cat" onclick="filterMenu('noncoffee',this)">Без кофе</button>
+      <button class="menu-cat" onclick="filterMenu('lemonade',this)">Лимонады</button>
+      <button class="menu-cat" onclick="filterMenu('food',this)">Выпечка</button>
+    </div>
+
+    <div class="menu-grid" id="menu-grid"></div>
+
+    <button class="cart-bar" id="cart-bar" onclick="openCart()">
+      <span>🛒 Корзина</span>
+      <span class="cart-count" id="cart-count">0</span>
+      <span id="cart-total">0 ₩</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOOKING
+══════════════════════════════════════ -->
+<div class="section" id="s-booking">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Резервация</div>
+      <h1 class="page-title">Забронировать <em>место</em></h1>
+      <p class="page-desc">Выбери формат, заполни форму — мы свяжемся для подтверждения через Telegram.</p>
+    </div>
+
+    <div id="booking-form-wrap">
+      <div class="booking-grid">
+        <div class="booking-type selected" onclick="selectType('table',this)">
+          <div class="bt-icon">🪑</div>
+          <h3>Стол в кафе</h3>
+          <p>Просто прийти и посидеть с напитками</p>
+        </div>
+        <div class="booking-type" onclick="selectType('games',this)">
+          <div class="bt-icon">🎲</div>
+          <h3>Настольные игры</h3>
+          <p>Место за игровым столом, запись обязательна</p>
+        </div>
+        <div class="booking-type" onclick="selectType('event',this)">
+          <div class="bt-icon">🎭</div>
+          <h3>Билет на событие</h3>
+          <p>Бункер, квиз, дискотека, бал</p>
+        </div>
+        <div class="booking-type" onclick="selectType('hall',this)">
+          <div class="bt-icon">🏛</div>
+          <h3>Аренда зала</h3>
+          <p>Выпускной, день рождения, встреча — 70K ₩/час</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ваше имя</label>
+          <input class="form-control" type="text" id="f-name" placeholder="Как вас зовут?">
+        </div>
+        <div class="form-group">
+          <label>Telegram / WhatsApp</label>
+          <input class="form-control" type="text" id="f-contact" placeholder="@username или номер">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Дата</label>
+        <input class="form-control" type="date" id="f-date">
+      </div>
+
+      <div class="form-group" id="time-group">
+        <label>Время</label>
+        <div class="time-slots">
+          <button class="time-slot active" onclick="selectTime(this)">12:00</button>
+          <button class="time-slot" onclick="selectTime(this)">14:00</button>
+          <button class="time-slot" onclick="selectTime(this)">15:00</button>
+          <button class="time-slot" onclick="selectTime(this)">17:00</button>
+          <button class="time-slot" onclick="selectTime(this)">19:00</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Количество гостей</label>
+          <select class="form-control" id="f-guests">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7–10</option><option>10+</option>
+          </select>
+        </div>
+        <div class="form-group" id="event-select-group" style="display:none">
+          <label>Событие</label>
+          <select class="form-control" id="f-event">
+            <option>Акустический вечер</option>
+            <option>Бункер (сеанс 14:00)</option>
+            <option>Бункер (сеанс 19:00)</option>
+            <option>Квиз</option>
+            <option>Дискотека</option>
+            <option>Исторический бал</option>
+            <option>Детский мастер-класс</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Комментарий (необязательно)</label>
+        <textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии, особые просьбы..."></textarea>
+      </div>
+
+      <div class="payment-info" id="payment-info">
+        <strong>Как работает оплата:</strong><br>
+        После отправки заявки мы напишем вам в Telegram с реквизитами для перевода. После оплаты вы получите QR-код билета — покажите его на входе.
+      </div>
+
+      <button class="submit-btn" onclick="submitBooking()">Отправить заявку →</button>
+    </div>
+
+    <div class="success-box" id="booking-success" style="display:none">
+      <h3>✅ Заявка отправлена!</h3>
+      <p>Мы напишем вам в Telegram в течение 1–2 часов с подтверждением и реквизитами для оплаты.</p>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div class="section" id="s-auth">
+  <div class="inner">
+    <div class="auth-wrap">
+      <div class="page-header">
+        <div class="page-eyebrow">Кабинет</div>
+        <h1 class="page-title">Войти в <em>кабинет</em></h1>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('client',this)">👤 Я гость</div>
+        <div class="auth-tab" onclick="switchAuthTab('register',this)">Регистрация</div>
+        <div class="auth-tab" onclick="switchAuthTab('staff',this)">🔐 Персонал</div>
+      </div>
+      <div class="auth-panel active" id="auth-client">
+        <div class="form-group"><label>Email</label><input class="form-control" type="email" id="login-email" placeholder="ваш@email.com"></div>
+        <div class="form-group"><label>Пароль</label><input class="form-control" type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')clientLogin()"></div>
+        <button class="submit-btn" onclick="clientLogin()" style="margin-bottom:12px">Войти →</button>
+        <p style="font-size:12px;color:var(--muted);text-align:center">Демо-вход: <span style="color:var(--accent);cursor:pointer;font-weight:500" onclick="demoLogin()">нажмите сюда</span></p>
+      </div>
+      <div class="auth-panel" id="auth-register">
+        <div class="form-row">
+          <div class="form-group"><label>Имя</label><input class="form-control" type="text" id="reg-name" placeholder="Ваше имя"></div>
+          <div class="form-group"><label>Email</label><input class="form-control" type="email" id="reg-email" placeholder="ваш@email.com"></div>
+        </div>
+        <div class="form-group"><label>Пароль</label><input class="form-control" type="password" id="reg-pass" placeholder="минимум 6 символов"></div>
+        <button class="submit-btn" onclick="clientRegister()">Создать аккаунт →</button>
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px">Уже есть аккаунт? <span style="color:var(--accent);cursor:pointer" onclick="switchAuthTab('client',null)">Войти</span></p>
+      </div>
+      <div class="auth-panel" id="auth-staff">
+        <div class="info-note"><strong>Только для персонала.</strong> Введите PIN-код для входа в панель управления.</div>
+        <div class="pin-display" id="pin-display">· · · ·</div>
+        <div class="staff-pin">
+          <button class="pin-btn" onclick="pinPress('1')">1</button><button class="pin-btn" onclick="pinPress('2')">2</button><button class="pin-btn" onclick="pinPress('3')">3</button>
+          <button class="pin-btn" onclick="pinPress('4')">4</button><button class="pin-btn" onclick="pinPress('5')">5</button><button class="pin-btn" onclick="pinPress('6')">6</button>
+          <button class="pin-btn" onclick="pinPress('7')">7</button><button class="pin-btn" onclick="pinPress('8')">8</button><button class="pin-btn" onclick="pinPress('9')">9</button>
+          <button class="pin-btn" onclick="pinPress('clear')" style="color:var(--rose)">✕</button>
+          <button class="pin-btn" onclick="pinPress('0')">0</button>
+          <button class="pin-btn" onclick="pinPress('ok')" style="background:var(--accent);border-color:var(--accent);color:#fff">✓</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);text-align:center">Демо PIN: <strong style="color:var(--accent)">1234</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT CABINET -->
+<div class="section" id="s-cabinet">
+  <div class="inner">
+    <div class="cab-header">
+      <div class="cab-user">
+        <div class="cab-avatar">👤</div>
+        <div><div class="cab-name" id="cab-name">—</div><div class="cab-email" id="cab-email">—</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Выйти</button>
+    </div>
+    <div class="cab-tabs">
+      <button class="cab-tab active" onclick="switchCabTab('tickets',this)">🎟 Мои билеты</button>
+      <button class="cab-tab" onclick="switchCabTab('bookings',this)">🪑 Бронирования</button>
+      <button class="cab-tab" onclick="switchCabTab('orders',this)">☕ Заказы</button>
+      <button class="cab-tab" onclick="switchCabTab('history',this)">📋 История</button>
+    </div>
+    <div class="cab-panel active" id="cp-tickets"><div id="my-tickets-list"></div></div>
+    <div class="cab-panel" id="cp-bookings"><div id="my-bookings-list"></div></div>
+    <div class="cab-panel" id="cp-orders"><div id="my-orders-list"></div></div>
+    <div class="cab-panel" id="cp-history"><div id="my-history-list"></div></div>
+  </div>
+</div>
+
+<!-- STAFF CABINET -->
+<div class="section" id="s-staff">
+  <div class="inner">
+    <div class="cab-header">
+      <div class="cab-user">
+        <div class="cab-avatar" style="background:var(--rose-dim);border-color:var(--rose)">🔐</div>
+        <div><div class="cab-name">Панель персонала</div><div class="cab-email">Охана · Ансан</div></div>
+      </div>
+      <button class="logout-btn" onclick="staffLogout()">Выйти</button>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card hot"><div class="dc-label">Заказов сегодня</div><div class="dc-val" id="d-orders">8</div><div class="dc-sub">напитков</div></div>
+      <div class="dash-card warn"><div class="dc-label">Броней сегодня</div><div class="dc-val" id="d-bookings">5</div><div class="dc-sub">столов/мест</div></div>
+      <div class="dash-card ok"><div class="dc-label">Гостей на ивенты</div><div class="dc-val" id="d-guests">7</div><div class="dc-sub">зарегистрировано</div></div>
+      <div class="dash-card"><div class="dc-label">Выручка июнь</div><div class="dc-val" style="color:var(--gold)">5.9M</div><div class="dc-sub">₩ прогноз</div></div>
+    </div>
+    <div class="cab-tabs">
+      <button class="cab-tab active" onclick="switchCabTab('s-drinks',this)">☕ Заказы</button>
+      <button class="cab-tab" onclick="switchCabTab('s-bookings',this)">🪑 Бронирования</button>
+      <button class="cab-tab" onclick="switchCabTab('s-guests',this)">👥 Гости</button>
+      <button class="cab-tab" onclick="switchCabTab('s-scanner',this)">📷 Сканер</button>
+      <button class="cab-tab" onclick="switchCabTab('s-revenue',this)">📊 Выручка</button>
+    </div>
+    <div class="cab-panel active" id="cp-s-drinks">
+      <div class="staff-section"><h3>Заказы напитков сегодня <span class="badge-count" id="drinks-count">8</span></h3><div id="staff-drinks-list"></div></div>
+    </div>
+    <div class="cab-panel" id="cp-s-bookings">
+      <div class="staff-section"><h3>Бронирования на сегодня <span class="badge-count">5</span></h3><div id="staff-bookings-list"></div></div>
+    </div>
+    <div class="cab-panel" id="cp-s-guests">
+      <div class="staff-section"><h3>Гости на мероприятия <span class="badge-count" id="guests-count">7</span></h3><div id="staff-guests-list"></div></div>
+    </div>
+    <div class="cab-panel" id="cp-s-scanner">
+      <div class="scanner-wrap" style="max-width:100%">
+        <div class="scanner-box">
+          <div style="font-size:36px;margin-bottom:10px">📷</div>
+          <h3 style="font-size:16px;font-weight:600;margin-bottom:6px">Проверка билета</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Введи код с QR-билета гостя</p>
+          <div class="code-input-wrap">
+            <input class="code-input" type="text" id="scan-input" placeholder="OHN-XXXXXX" maxlength="10" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')scanTicket()">
+            <button class="scan-btn" onclick="scanTicket()">Проверить</button>
+          </div>
+        </div>
+        <div class="scan-result" id="scan-result"></div>
+        <div style="margin-top:20px"><h3 style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:12px">История проверок</h3><div id="scan-history"><div class="empty-state"><div class="es-icon">🔍</div>Нет проверенных билетов</div></div></div>
+      </div>
+    </div>
+    <div class="cab-panel" id="cp-s-revenue">
+      <div class="staff-section"><h3>Прогноз выручки — июнь 2026</h3><div id="revenue-bars"></div></div>
+      <div style="height:1px;background:var(--border);margin:20px 0"></div>
+      <div class="staff-section"><h3>По источникам дохода</h3><div id="revenue-stats"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     INFO
+══════════════════════════════════════ -->
+<div class="section" id="s-info">
+  <div class="inner">
+    <div class="page-header">
+      <div class="page-eyebrow">О кафе</div>
+      <h1 class="page-title">Охана — <em>не место,<br>а люди!</em></h1>
+      <p style="font-size:11px;color:var(--accent);letter-spacing:.14em;font-weight:600;margin-bottom:12px;text-transform:uppercase">— наш девиз</p>
+      <p class="page-desc">Мы создаём пространство где русскоязычным в Корее комфортно, уютно и интересно.</p>
+    </div>
+
+    <div class="info-blocks">
+      <div class="info-block">
+        <h3>🕐 Часы работы</h3>
+        <ul>
+          <li>Понедельник — выходной</li>
+          <li>Вт–Чт: 12:00–22:00</li>
+          <li>Пт–Сб: 12:00–23:00</li>
+          <li>Воскресенье: 14:00–21:00</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h3>📍 Где мы</h3>
+        <p>Ансан, Южная Корея<br><br>Ближайшая станция метро — уточните в нашем Telegram-канале. Парковка рядом.</p>
+      </div>
+      <div class="info-block">
+        <h3>📞 Связь</h3>
+        <ul>
+          <li>Telegram-канал: @ohana_ansan</li>
+          <li>Instagram: @ohana.cafe.ansan</li>
+          <li>KakaoTalk: ohana_cafe</li>
+        </ul>
+      </div>
+      <div class="info-block">
+        <h3>🏛 Аренда зала</h3>
+        <p>Зал вмещает до 40–50 человек.<br>Стоимость: <strong style="color:var(--gold)">70 000 ₩/час</strong><br>+ обязательный заказ напитков.<br><br>Выпускные, ДР, корпоративы, встречи.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <h3 style="font-size:16px;font-weight:600;margin-bottom:16px">Наши правила</h3>
+    <div class="rules-list">
+      <div class="rule"><div class="rule-icon">🚫</div><div class="rule-text"><strong>Без алкоголя.</strong> Мы принципиально безалкогольное кафе — и это делает нас особенными.</div></div>
+      <div class="rule"><div class="rule-icon">🤐</div><div class="rule-text"><strong>Без мата.</strong> У нас семейная атмосфера — следим за языком.</div></div>
+      <div class="rule"><div class="rule-icon">👧</div><div class="rule-text"><strong>Безопасно для детей.</strong> Дети всегда желанны — но за ними следят родители.</div></div>
+      <div class="rule"><div class="rule-icon">❤️</div><div class="rule-text"><strong>Уважение.</strong> К гостям, персоналу, соседям за столом — ко всем.</div></div>
+      <div class="rule"><div class="rule-icon">🎤</div><div class="rule-text"><strong>Акустика без хвастовства.</strong> Открытый микрофон — для всех, а не для звёзд. Никого не стыдим.</div></div>
+    </div>
+
+    <div class="map-placeholder" style="margin-top:32px">
+      <div style="font-size:32px">🗺</div>
+      <p>Карта появится после уточнения адреса.<br>Следите за обновлениями в Telegram-канале.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TICKET MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="ticket-icon">🎟</div>
+    <h2 id="m-title">Ваш билет</h2>
+    <p class="modal-sub" id="m-sub">Покажите QR-код на входе. Сохраните скриншот.</p>
+    <div class="qr-wrap"><div id="qr-code"></div></div>
+    <div class="ticket-code" id="m-code"></div>
+    <div class="ticket-details" id="m-details"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-primary modal-actions button" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer" onclick="closeModal()">Готово</button>
+    </div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cart-modal">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-close" onclick="closeCartModal()">✕</button>
+    <div class="ticket-icon">🛒</div>
+    <h2>Ваш заказ</h2>
+    <p class="modal-sub">Покажи код заказа на кассе — всё будет готово.</p>
+    <div class="ticket-details" id="cart-details"></div>
+    <div class="qr-wrap"><div id="cart-qr"></div></div>
+    <div class="ticket-code" id="cart-code-display"></div>
+    <button style="width:100%;padding:12px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px" onclick="closeCartModal()">Отлично!</button>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ═══════════════════════════════════════════
+const EVENTS=[
+  {id:'ev1',title:'Акустический вечер',date:'2026-06-13',day:'13',mon:'ИЮН',time:'19:00–22:00',desc:'Открытый микрофон — петь, читать стихи, играть. Без давления.',price:'Бесплатно + заказ',price_num:0,color:'#5C4E8A',tag:'Каждую пятницу',tagCls:'tag-blue',seats:30},
+  {id:'ev2',title:'Бункер — психологическая игра',date:'2026-06-20',day:'20',mon:'ИЮН',time:'14:00 и 19:00',desc:'Ролевая игра на выживание. Группы 8–12 человек. Запись обязательна.',price:'12 000 ₩',price_num:12000,color:'#4A7C59',tag:'2-я суббота',tagCls:'tag-green',seats:12},
+  {id:'ev3',title:'Дискотека: 90-е & 2000-е',date:'2026-06-27',day:'27',mon:'ИЮН',time:'19:00–23:00',desc:'Тематическая вечеринка без алкоголя. Диджей Вика за пультом.',price:'15 000 ₩',price_num:15000,color:'#9E4A6E',tag:'3-я суббота',tagCls:'tag-rose',seats:60},
+  {id:'ev4',title:'Квиз',date:'2026-06-28',day:'28',mon:'ИЮН',time:'14:30–17:00',desc:'Командная викторина. K-pop, Корея, история, поп-культура.',price:'7 000 ₩',price_num:7000,color:'#9A7B3A',tag:'4-е воскресенье',tagCls:'tag-gold',seats:50},
+  {id:'ev5',title:'Исторический бал',date:'2026-07-11',day:'11',mon:'ИЮЛ',time:'17:00–23:00',desc:'Вальс, мазурка, полонез со сменой партнёров. Дресс-код обязателен. 16+.',price:'25 000 ₩',price_num:25000,color:'#B85E7A',tag:'16+',tagCls:'tag-rose',seats:30},
+  {id:'ev6',title:'Детский МК: лепка',date:'2026-07-05',day:'5',mon:'ИЮЛ',time:'14:30–16:30',desc:'Лепка из глины для детей 5–12 лет. Материалы включены.',price:'18 000 ₩',price_num:18000,color:'#C4633A',tag:'Воскресенье',tagCls:'tag-orange',seats:15},
+];
+const MENU=[
+  {id:'m1',name:'Маленький американо',desc:'Горячий, 150 мл',price:4000,cat:'coffee'},
+  {id:'m2',name:'Большой американо',desc:'Горячий, 300 мл',price:5000,cat:'coffee'},
+  {id:'m3',name:'Капучино',desc:'Сливочная пенка, 250 мл',price:5500,cat:'coffee'},
+  {id:'m4',name:'Флэт уайт',desc:'Двойной эспрессо, 200 мл',price:5500,cat:'coffee'},
+  {id:'m5',name:'Латте',desc:'Мягкий, 300 мл',price:6000,cat:'coffee'},
+  {id:'m6',name:'Бородинский кофе',desc:'Фирменный напиток Оханы',price:6500,cat:'coffee'},
+  {id:'m7',name:'Горячий шоколад',desc:'250 мл',price:5500,cat:'noncoffee'},
+  {id:'m8',name:'Матча латте',desc:'Японский зелёный чай',price:6000,cat:'noncoffee'},
+  {id:'m9',name:'Чай (ассорти)',desc:'Чёрный, зелёный, фруктовый',price:4500,cat:'noncoffee'},
+  {id:'m10',name:'Домашний лимонад',desc:'Сезонные ягоды, мята',price:5500,cat:'lemonade'},
+  {id:'m11',name:'Глинтвейн б/а',desc:'Пряный, согревающий',price:6000,cat:'lemonade'},
+  {id:'m12',name:'Молочный коктейль',desc:'Ваниль, шоколад или клубника',price:6500,cat:'lemonade'},
+  {id:'m13',name:'Кусочек торта',desc:'Выбор дня',price:5500,cat:'food'},
+  {id:'m14',name:'Пирожок',desc:'С капустой или картошкой',price:4000,cat:'food'},
+  {id:'m15',name:'Блинчик',desc:'С творогом или вареньем',price:4500,cat:'food'},
+  {id:'m16',name:'Детский набор',desc:'Сок + печенье',price:5000,cat:'food'},
+];
+
+// ═══ STATE ═══════════════════════════════════════════
+const USERS={};
+const TICKETS={};
+const ORDERS=[];
+const BOOKINGS=[];
+let currentUser=null, staffLoggedIn=false, pinInput='';
+const STAFF_PIN='1234';
+function makeCode(p){return p+'-'+Math.random().toString(36).substr(2,6).toUpperCase();}
+
+// Seed demo
+TICKETS['OHN-DEMO1']={code:'OHN-DEMO1',event:'Акустический вечер',date:'2026-06-13',time:'19:00–22:00',price:'Бесплатно + заказ',paid:true,used:false,buyer:'Анна',userEmail:'demo@ohana.kr'};
+TICKETS['OHN-DEMO2']={code:'OHN-DEMO2',event:'Дискотека: 90-е',date:'2026-06-27',time:'19:00–23:00',price:'15 000 ₩',paid:true,used:true,buyer:'Анна',userEmail:'demo@ohana.kr'};
+TICKETS['OHN-DEMO3']={code:'OHN-DEMO3',event:'Бункер',date:'2026-06-20',time:'14:00',price:'12 000 ₩',paid:false,used:false,buyer:'Анна',userEmail:'demo@ohana.kr'};
+ORDERS.push({id:'ZAK-A1B2C',user:'demo@ohana.kr',items:[{name:'Капучино',qty:2,price:5500},{name:'Блинчик',qty:1,price:4500}],total:15500,time:'14:30',date:'2026-06-07',status:'ready'});
+ORDERS.push({id:'ZAK-D4E5F',user:'demo@ohana.kr',items:[{name:'Латте',qty:1,price:6000}],total:6000,time:'16:00',date:'2026-06-05',status:'done'});
+BOOKINGS.push({id:'BK-001',user:'demo@ohana.kr',type:'Настольные игры',date:'2026-06-14',time:'15:00',guests:3,status:'confirmed',name:'Анна'});
+BOOKINGS.push({id:'BK-002',user:'demo@ohana.kr',type:'Билет — Бункер',date:'2026-06-20',time:'19:00',guests:1,status:'pending',name:'Анна'});
+
+const STAFF_ORDERS=[
+  {name:'Мария',items:'Латте ×1, Блинчик ×2',time:'12:30',status:'new'},
+  {name:'Алексей',items:'Американо ×2',time:'12:45',status:'new'},
+  {name:'Дана',items:'Матча латте ×1, Торт ×1',time:'13:10',status:'ready'},
+  {name:'Виктор',items:'Молочный коктейль ×2, Пирожок ×1',time:'13:20',status:'new'},
+  {name:'Лена',items:'Капучино ×1',time:'13:35',status:'done'},
+  {name:'Рома',items:'Горячий шоколад ×1, Торт ×1',time:'13:50',status:'ready'},
+  {name:'Оля',items:'Чай ×2, Блинчик ×1',time:'14:00',status:'new'},
+  {name:'Сергей',items:'Бородинский кофе ×1',time:'14:15',status:'new'},
+];
+const STAFF_BOOKINGS=[
+  {name:'Анна К.',type:'Настольные игры',time:'15:00',guests:3,status:'confirmed'},
+  {name:'Максим Р.',type:'Стол',time:'14:00',guests:2,status:'confirmed'},
+  {name:'Семья Ли',type:'Стол',time:'17:00',guests:5,status:'confirmed'},
+  {name:'Виктория',type:'Билет — Бункер',time:'19:00',guests:1,status:'pending'},
+  {name:'Дима + Маша',type:'Аренда зала',time:'18:00',guests:15,status:'confirmed'},
+];
+const STAFF_GUESTS=[
+  {name:'Анна К.',event:'Акустика 13 июня',ticket:'OHN-DEMO1',paid:true,used:false},
+  {name:'Максим Р.',event:'Дискотека 27 июня',ticket:'OHN-DEMO2',paid:true,used:true},
+  {name:'Виктория С.',event:'Бункер 20 июня',ticket:'OHN-DEMO3',paid:false,used:false},
+  {name:'Дима В.',event:'Квиз 28 июня',ticket:'OHN-X1Y2Z3',paid:true,used:false},
+  {name:'Лена П.',event:'Бал 11 июля',ticket:'OHN-BALL01',paid:true,used:false},
+  {name:'Олег Н.',event:'Акустика 13 июня',ticket:'OHN-AC0001',paid:true,used:false},
+  {name:'Саша М.',event:'Детский МК',ticket:'OHN-KD0001',paid:true,used:false},
+];
+
+// ═══ NAV ═════════════════════════════════════════════
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  const nl=document.querySelector(`.nav-link[onclick*="'${id}'"]`);
+  if(nl)nl.classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('mobile-menu').classList.remove('open');
+}
+function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('open');}
+function handleAccountNav(){
+  if(staffLoggedIn){showSection('staff');return;}
+  if(currentUser){showSection('cabinet');return;}
+  showSection('auth');
+}
+function updateNavBtn(){
+  const btn=document.getElementById('nav-acc-btn');
+  if(!btn)return;
+  if(staffLoggedIn){btn.textContent='🔐 Персонал';}
+  else if(currentUser){btn.textContent='👤 '+currentUser.name.split(' ')[0];}
+  else{btn.textContent='👤 Войти';}
+}
+
+// ═══ AUTH ════════════════════════════════════════════
+function switchAuthTab(id,btn){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.auth-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('auth-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else{const tabs=document.querySelectorAll('.auth-tab');if(id==='client')tabs[0].classList.add('active');}
+}
+function clientLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){alert('Введите email и пароль');return;}
+  if(USERS[email]&&USERS[email].password===pass){currentUser=USERS[email];onClientLogin();}
+  else{alert('Неверный email или пароль.\nДля демо нажмите «демо-вход»');}
+}
+function demoLogin(){
+  if(!USERS['demo@ohana.kr'])USERS['demo@ohana.kr']={name:'Анна (демо)',email:'demo@ohana.kr',password:'demo123'};
+  currentUser=USERS['demo@ohana.kr'];onClientLogin();
+}
+function clientRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!name||!email||!pass){alert('Заполните все поля');return;}
+  if(pass.length<6){alert('Пароль минимум 6 символов');return;}
+  if(USERS[email]){alert('Email уже зарегистрирован');return;}
+  USERS[email]={name,email,password:pass};currentUser=USERS[email];onClientLogin();
+}
+function onClientLogin(){updateNavBtn();renderCabinet();showSection('cabinet');}
+function logout(){currentUser=null;updateNavBtn();showSection('auth');}
+
+// PIN
+function pinPress(v){
+  if(v==='clear'){pinInput='';renderPin();return;}
+  if(v==='ok'){
+    if(pinInput===STAFF_PIN){staffLogin();}
+    else{document.getElementById('pin-display').textContent='❌ Неверно';pinInput='';setTimeout(renderPin,900);}
+    return;
+  }
+  if(pinInput.length<4)pinInput+=v;
+  renderPin();
+  if(pinInput.length===4)setTimeout(()=>pinPress('ok'),350);
+}
+function renderPin(){document.getElementById('pin-display').textContent=pinInput?'● '.repeat(pinInput.length).trim():'· · · ·';}
+function staffLogin(){staffLoggedIn=true;updateNavBtn();renderStaffCabinet();showSection('staff');}
+function staffLogout(){staffLoggedIn=false;pinInput='';renderPin();updateNavBtn();showSection('home');}
+
+// ═══ CLIENT CABINET ══════════════════════════════════
+function switchCabTab(id,btn){
+  const wrap=btn.closest('.section').querySelector('.inner');
+  wrap.querySelectorAll('.cab-tab').forEach(t=>t.classList.remove('active'));
+  wrap.querySelectorAll('.cab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cp-'+id).classList.add('active');
+}
+function renderCabinet(){
+  if(!currentUser)return;
+  document.getElementById('cab-name').textContent=currentUser.name;
+  document.getElementById('cab-email').textContent=currentUser.email;
+  renderMyTickets();renderMyBookings();renderMyOrders();renderMyHistory();
+}
+function renderMyTickets(){
+  const el=document.getElementById('my-tickets-list');
+  const myT=Object.values(TICKETS).filter(t=>t.userEmail===currentUser.email);
+  if(!myT.length){el.innerHTML='<div class="empty-state"><div class="es-icon">🎟</div>Нет билетов.<br><span style="color:var(--accent);cursor:pointer" onclick="showSection('events')">Посмотреть афишу →</span></div>';return;}
+  el.innerHTML=myT.map(t=>`
+    <div class="ticket-card">
+      <div class="tc-stripe" style="background:${t.paid&&!t.used?'var(--accent2)':t.used?'var(--muted)':'var(--gold)'}"></div>
+      <div class="tc-body">
+        <div class="tc-info">
+          <h4>${t.event}</h4>
+          <p>${formatDate(t.date)} · ${t.time}</p>
+          <p>Стоимость: ${t.price}</p>
+          <span class="tc-status" style="background:${t.used?'var(--gold-dim)':t.paid?'var(--accent2-dim)':'var(--accent-dim)'};color:${t.used?'var(--gold)':t.paid?'var(--accent2)':'var(--accent)'}">${t.used?'✓ Использован':t.paid?'✅ Оплачен':'⏳ Ожидает оплаты'}</span>
+        </div>
+        ${!t.used?`<button class="tc-qr-btn" onclick="showTicketModal(TICKETS['${t.code}'])">QR-код →</button>`:''}
+      </div>
+    </div>`).join('');
+}
+function renderMyBookings(){
+  const el=document.getElementById('my-bookings-list');
+  const myB=BOOKINGS.filter(b=>b.user===currentUser.email);
+  if(!myB.length){el.innerHTML='<div class="empty-state"><div class="es-icon">🪑</div>Нет бронирований.<br><span style="color:var(--accent);cursor:pointer" onclick="showSection('booking')">Забронировать →</span></div>';return;}
+  el.innerHTML=myB.map(b=>`
+    <div class="order-card">
+      <div class="order-header"><h4>${b.type}</h4><span class="tc-status" style="background:${b.status==='confirmed'?'var(--accent2-dim)':'var(--gold-dim)'};color:${b.status==='confirmed'?'var(--accent2)':'var(--gold)'}">${b.status==='confirmed'?'✅ Подтверждено':'⏳ Ожидает'}</span></div>
+      <div class="order-items">${formatDate(b.date)} · ${b.time} · ${b.guests} гост.</div>
+    </div>`).join('');
+}
+function renderMyOrders(){
+  const el=document.getElementById('my-orders-list');
+  const myO=ORDERS.filter(o=>o.user===currentUser.email);
+  if(!myO.length){el.innerHTML='<div class="empty-state"><div class="es-icon">☕</div>Нет заказов.<br><span style="color:var(--accent);cursor:pointer" onclick="showSection('menu')">Открыть меню →</span></div>';return;}
+  el.innerHTML=myO.map(o=>`
+    <div class="order-card">
+      <div class="order-header"><h4>Заказ ${o.id}</h4><span class="tc-status" style="background:${o.status==='done'?'var(--gold-dim)':o.status==='ready'?'var(--accent2-dim)':'var(--accent-dim)'};color:${o.status==='done'?'var(--gold)':o.status==='ready'?'var(--accent2)':'var(--accent)'}">${o.status==='done'?'Выдан':o.status==='ready'?'✓ Готов':'Готовится'}</span></div>
+      <div class="order-items">${o.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</div>
+      <div class="order-total">${o.total.toLocaleString('ru-RU')} ₩ · ${o.time} · ${o.date}</div>
+    </div>`).join('');
+}
+function renderMyHistory(){
+  const el=document.getElementById('my-history-list');
+  const usedT=Object.values(TICKETS).filter(t=>t.userEmail===currentUser.email&&t.used);
+  const allB=BOOKINGS.filter(b=>b.user===currentUser.email);
+  if(!usedT.length&&!allB.length){el.innerHTML='<div class="empty-state"><div class="es-icon">📋</div>История пуста</div>';return;}
+  el.innerHTML=(usedT.length?'<p style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Посещённые события</p>'+usedT.map(t=>`<div class="order-card"><div class="order-header"><h4>${t.event}</h4><span style="font-size:11px;color:var(--muted)">использован</span></div><div class="order-items">${formatDate(t.date)}</div></div>`).join(''):'')
+    +(allB.length?'<p style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 12px">Все бронирования</p>'+allB.map(b=>`<div class="order-card"><div class="order-header"><h4>${b.type}</h4></div><div class="order-items">${formatDate(b.date)} · ${b.time}</div></div>`).join(''):'');
+}
+
+// ═══ STAFF CABINET ═══════════════════════════════════
+function renderStaffCabinet(){renderStaffDrinks();renderStaffBookings();renderStaffGuests();renderRevenue();}
+function renderStaffDrinks(){
+  const colors={new:'var(--accent)',ready:'var(--accent2)',done:'var(--muted)'};
+  const labels={new:'Готовится',ready:'Готово ✓',done:'Выдан'};
+  document.getElementById('staff-drinks-list').innerHTML=STAFF_ORDERS.map((o,i)=>`
+    <div class="order-row">
+      <div class="or-left"><h4>${o.name}</h4><p>${o.items}</p></div>
+      <div class="or-time">${o.time}</div>
+      <button class="or-status" style="background:${o.status==='new'?'var(--accent-dim)':o.status==='ready'?'var(--accent2-dim)':'var(--border)'};color:${colors[o.status]};border:1px solid ${colors[o.status]}" onclick="toggleOrderStatus(${i})">${labels[o.status]}</button>
+    </div>`).join('');
+  document.getElementById('drinks-count').textContent=STAFF_ORDERS.filter(o=>o.status!=='done').length;
+}
+function toggleOrderStatus(i){const s=STAFF_ORDERS[i].status;STAFF_ORDERS[i].status=s==='new'?'ready':s==='ready'?'done':'new';renderStaffDrinks();}
+function renderStaffBookings(){
+  document.getElementById('staff-bookings-list').innerHTML=STAFF_BOOKINGS.map(b=>`
+    <div class="order-row">
+      <div class="or-left"><h4>${b.name}</h4><p>${b.type} · ${b.guests} гост.</p></div>
+      <div class="or-time">${b.time}</div>
+      <span class="tc-status" style="background:${b.status==='confirmed'?'var(--accent2-dim)':'var(--gold-dim)'};color:${b.status==='confirmed'?'var(--accent2)':'var(--gold)'}">${b.status==='confirmed'?'✅ Подтверждено':'⏳ Ожидает'}</span>
+    </div>`).join('');
+}
+function renderStaffGuests(){
+  document.getElementById('staff-guests-list').innerHTML=STAFF_GUESTS.map(g=>`
+    <div class="guest-row">
+      <div><div class="gr-name">${g.name}</div><div class="gr-event">${g.event} · <span style="font-family:monospace;font-size:10px">${g.ticket}</span></div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="tc-status" style="background:${g.paid?'var(--accent2-dim)':'var(--rose-dim)'};color:${g.paid?'var(--accent2)':'var(--rose)'}">${g.paid?'Оплачен':'Не оплачен'}</span>
+        <span class="tc-status" style="background:${g.used?'var(--gold-dim)':'var(--border)'};color:${g.used?'var(--gold)':'var(--muted)'}">${g.used?'Был':'Ещё нет'}</span>
+      </div>
+    </div>`).join('');
+  document.getElementById('guests-count').textContent=STAFF_GUESTS.length;
+}
+function renderRevenue(){
+  const rows=[
+    {label:'Напитки (кафе)',val:3200000,color:'var(--accent)'},
+    {label:'Входные билеты',val:1800000,color:'var(--accent2)'},
+    {label:'Аренда зала',val:560000,color:'var(--gold)'},
+    {label:'Выпечка',val:420000,color:'var(--rose)'},
+    {label:'Детские МК',val:360000,color:'var(--blue)'},
+  ];
+  const max=Math.max(...rows.map(r=>r.val));
+  document.getElementById('revenue-bars').innerHTML=rows.map(r=>`
+    <div class="rev-row">
+      <div class="rev-label">${r.label}</div>
+      <div class="rev-bar-wrap"><div class="rev-bar" style="width:${Math.round(r.val/max*100)}%;background:${r.color}"></div></div>
+      <div class="rev-val" style="color:${r.color}">${(r.val/1000000).toFixed(1)}M ₩</div>
+    </div>`).join('');
+  const total=rows.reduce((s,r)=>s+r.val,0);
+  const fixed=4710000;
+  document.getElementById('revenue-stats').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+      <div class="dash-card"><div class="dc-label">Итого выручка</div><div class="dc-val" style="color:var(--gold)">${(total/1000000).toFixed(1)}M ₩</div><div class="dc-sub">прогноз месяц</div></div>
+      <div class="dash-card"><div class="dc-label">Расходы</div><div class="dc-val" style="color:var(--rose)">${(fixed/1000000).toFixed(1)}M ₩</div><div class="dc-sub">аренда+з.п+продукты</div></div>
+      <div class="dash-card ${total>fixed?'ok':''}"><div class="dc-label">Прибыль</div><div class="dc-val" style="color:${total>fixed?'var(--accent2)':'var(--rose)'}">${((total-fixed)/1000000).toFixed(1)}M ₩</div><div class="dc-sub">${total>fixed?'прибыль':'убыток'}</div></div>
+      <div class="dash-card warn"><div class="dc-label">До цели 10M</div><div class="dc-val">${((10000000-total)/1000000).toFixed(1)}M ₩</div><div class="dc-sub">осталось</div></div>
+    </div>`;
+}
+
+// ═══ SCANNER ═════════════════════════════════════════
+let scanHistory=[];
+function scanTicket(){
+  const code=document.getElementById('scan-input').value.trim().toUpperCase();
+  if(!code)return;
+  const ticket=TICKETS[code];
+  const g=STAFF_GUESTS.find(x=>x.ticket===code);
+  const resultEl=document.getElementById('scan-result');
+  resultEl.style.display='block';
+  if(!ticket&&!g){
+    resultEl.className='scan-result invalid';
+    resultEl.innerHTML=`<div class="sr-status">❌</div><h3>Билет не найден</h3><p style="font-size:13px;color:var(--muted)">Код <strong>${code}</strong> не существует.</p>`;
+    addScanHistory(code,'—','invalid');return;
+  }
+  const t=ticket||{used:g.used,paid:g.paid,event:g.event,date:'',time:'',buyer:g.name,price:'—',code};
+  if(t.used){
+    resultEl.className='scan-result invalid';
+    resultEl.innerHTML=`<div class="sr-status">⚠️</div><h3>Уже использован</h3><div class="sr-row"><span class="sr-label">Событие</span><span>${t.event}</span></div><div class="sr-row"><span class="sr-label">Гость</span><span>${t.buyer||g?.name||'—'}</span></div>`;
+    addScanHistory(code,t.event,'used');return;
+  }
+  if(!t.paid){
+    resultEl.className='scan-result invalid';
+    resultEl.innerHTML=`<div class="sr-status">⏳</div><h3>Не оплачен</h3><div class="sr-row"><span class="sr-label">Событие</span><span>${t.event}</span></div>`;return;
+  }
+  resultEl.className='scan-result valid';
+  resultEl.innerHTML=`<div class="sr-status">✅</div><h3 style="color:var(--accent2)">Билет действителен!</h3>
+    <div class="sr-row"><span class="sr-label">Событие</span><span>${t.event}</span></div>
+    ${t.date?`<div class="sr-row"><span class="sr-label">Дата</span><span>${formatDate(t.date)}</span></div>`:''}
+    ${t.time?`<div class="sr-row"><span class="sr-label">Время</span><span>${t.time}</span></div>`:''}
+    <div class="sr-row"><span class="sr-label">Гость</span><span>${t.buyer||g?.name||'—'}</span></div>
+    <div class="sr-row"><span class="sr-label">Цена</span><span>${t.price}</span></div>
+    <button class="mark-used-btn" onclick="markUsed('${code}')">✓ Отметить как использованный</button>`;
+  addScanHistory(code,t.event,'valid');
+}
+function markUsed(code){
+  if(TICKETS[code])TICKETS[code].used=true;
+  const g=STAFF_GUESTS.find(x=>x.ticket===code);if(g)g.used=true;
+  document.getElementById('scan-input').value='';
+  document.getElementById('scan-result').style.display='none';
+}
+function addScanHistory(code,event,status){
+  scanHistory.unshift({code,event,status,time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})});
+  const labels={valid:'Действителен',used:'Использован',invalid:'Не найден'};
+  document.getElementById('scan-history').innerHTML=scanHistory.slice(0,8).map(h=>`
+    <div class="scan-hist-item">
+      <div><div style="font-weight:500;font-size:13px">${h.event||'—'}</div><div class="shi-code">${h.code} · ${h.time}</div></div>
+      <span class="shi-badge ${h.status}">${labels[h.status]}</span>
+    </div>`).join('');
+}
+
+// ═══ EVENTS ══════════════════════════════════════════
+function renderEvents(){
+  document.getElementById('events-list').innerHTML=EVENTS.map(ev=>`
+    <div class="ev-card">
+      <div class="ev-top">
+        <div class="ev-stripe" style="background:${ev.color}"></div>
+        <div class="ev-main">
+          <div class="ev-date-col"><div class="ev-day">${ev.day}</div><div class="ev-mon">${ev.mon}</div></div>
+          <div class="ev-info">
+            <div class="ev-title">${ev.title}</div>
+            <div class="ev-meta">🕐 ${ev.time} · 👥 до ${ev.seats} мест</div>
+            <div class="ev-desc">${ev.desc}</div>
+            <div class="ev-footer">
+              <span class="ev-price">${ev.price}</span>
+              <span class="tag ${ev.tagCls}">${ev.tag}</span>
+              ${ev.price_num>0
+                ?`<button class="ev-btn" style="background:${ev.color};color:#fff" onclick="buyTicket('${ev.id}')">Купить билет</button>`
+                :`<button class="ev-btn" style="background:transparent;border:1px solid ${ev.color};color:${ev.color}" onclick="showSection('booking')">Записаться</button>`}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function buyTicket(evId){
+  const ev=EVENTS.find(e=>e.id===evId);if(!ev)return;
+  const code=makeCode('OHN');
+  const userEmail=currentUser?currentUser.email:'demo@ohana.kr';
+  const buyer=currentUser?currentUser.name:'Гость';
+  TICKETS[code]={code,event:ev.title,date:ev.date,time:ev.time,price:ev.price,paid:true,used:false,buyer,userEmail};
+  showTicketModal(TICKETS[code]);
+}
+
+// ═══ MODALS ══════════════════════════════════════════
+function showTicketModal(t){
+  document.getElementById('m-title').textContent=t.event;
+  document.getElementById('m-code').textContent='Код: '+t.code;
+  document.getElementById('m-details').innerHTML=`
+    <div class="td-row"><span class="td-label">Событие</span><span class="td-val">${t.event}</span></div>
+    <div class="td-row"><span class="td-label">Дата</span><span class="td-val">${formatDate(t.date)}</span></div>
+    <div class="td-row"><span class="td-label">Время</span><span class="td-val">${t.time}</span></div>
+    <div class="td-row"><span class="td-label">Стоимость</span><span class="td-val">${t.price}</span></div>
+    <div class="td-row"><span class="td-label">Статус</span><span class="td-val" style="color:var(--accent2)">✅ Оплачен</span></div>`;
+  const qrEl=document.getElementById('qr-code');qrEl.innerHTML='';
+  new QRCode(qrEl,{text:t.code,width:140,height:140,colorDark:'#0E0C0A',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('ticket-modal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ═══ MENU ════════════════════════════════════════════
+let cart={};
+function renderMenu(cat='all'){
+  const items=cat==='all'?MENU:MENU.filter(m=>m.cat===cat);
+  document.getElementById('menu-grid').innerHTML=items.map(m=>`
+    <div class="menu-item">
+      <div class="menu-item-info"><h4>${m.name}</h4><p>${m.desc}</p></div>
+      <div style="flex-shrink:0;text-align:right">
+        <div class="menu-price">${m.price.toLocaleString('ru-RU')} ₩</div>
+        <button class="menu-add" onclick="addToCart('${m.id}')">+</button>
+      </div>
+    </div>`).join('');
+}
+function filterMenu(cat,btn){
+  document.querySelectorAll('.menu-cat').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderMenu(cat);
+}
+function addToCart(id){
+  const item=MENU.find(m=>m.id===id);if(!item)return;
+  cart[id]=cart[id]?{...cart[id],qty:cart[id].qty+1}:{...item,qty:1};
+  updateCartBar();
+}
+function updateCartBar(){
+  const total=Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0);
+  const count=Object.values(cart).reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cart-count').textContent=count;
+  document.getElementById('cart-total').textContent=total.toLocaleString('ru-RU')+' ₩';
+  document.getElementById('cart-bar').classList.toggle('show',count>0);
+}
+function openCart(){
+  const total=Object.values(cart).reduce((s,i)=>s+i.price*i.qty,0);
+  const code=makeCode('ZAK');
+  document.getElementById('cart-details').innerHTML=
+    Object.values(cart).map(i=>`<div class="td-row"><span class="td-label">${i.name} ×${i.qty}</span><span class="td-val">${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span></div>`).join('')+
+    `<div class="td-row"><span class="td-label">Итого</span><span class="td-val" style="color:var(--gold)">${total.toLocaleString('ru-RU')} ₩</span></div>`;
+  document.getElementById('cart-code-display').textContent='Код заказа: '+code;
+  const qr=document.getElementById('cart-qr');qr.innerHTML='';
+  new QRCode(qr,{text:code,width:120,height:120,colorDark:'#0E0C0A',colorLight:'#ffffff'});
+  if(currentUser)ORDERS.push({id:code,user:currentUser.email,items:Object.values(cart).map(i=>({name:i.name,qty:i.qty,price:i.price})),total,time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),date:new Date().toISOString().split('T')[0],status:'new'});
+  document.getElementById('cart-modal').classList.add('open');
+}
+
+// ═══ BOOKING ═════════════════════════════════════════
+let selectedBookingType='table',selectedTime='12:00';
+function selectType(type,el){
+  document.querySelectorAll('.booking-type').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');selectedBookingType=type;
+  document.getElementById('event-select-group').style.display=type==='event'?'block':'none';
+}
+function selectTime(btn){
+  document.querySelectorAll('.time-slot').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');selectedTime=btn.textContent;
+}
+function submitBooking(){
+  const name=document.getElementById('f-name').value.trim();
+  const email=document.getElementById('f-email').value.trim()||currentUser?.email||'guest';
+  const date=document.getElementById('f-date').value;
+  if(!name||!date){alert('Заполните имя и дату');return;}
+  const type=selectedBookingType==='event'?'Билет — '+document.getElementById('f-event').value:selectedBookingType==='hall'?'Аренда зала':selectedBookingType==='games'?'Настольные игры':'Стол';
+  BOOKINGS.push({id:makeCode('BK'),user:email,type,date,time:selectedTime,guests:document.getElementById('f-guests').value,status:'pending',name});
+  document.getElementById('booking-form-wrap').style.display='none';
+  document.getElementById('booking-success').style.display='block';
+}
+
+// ═══ UTILS ═══════════════════════════════════════════
+function formatDate(d){
+  if(!d)return'—';
+  try{return new Date(d+'T12:00:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});}catch{return d;}
+}
+
+// INIT
+document.getElementById('f-date').min=new Date().toISOString().split('T')[0];
+renderEvents();
+renderMenu();
+
+</script>
+</body>
+</html>
