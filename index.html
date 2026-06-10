@@ -1504,8 +1504,12 @@ nav{
     <div id="cart-step-waiting-card" style="display:none;text-align:center;padding:10px 0">
       <div style="font-size:48px;margin-bottom:16px">💳</div>
       <h2>Ожидайте оплаты</h2>
-      <p class="modal-sub">Оплатите картой на кассе.<br>После оплаты мы вышлем QR-чек в Telegram.</p>
+      <p class="modal-sub">После оплаты бот пришлёт QR-чек в Telegram.</p>
       <div id="cart-order-summary-card" style="background:var(--sand2);border-radius:12px;padding:14px;margin:16px 0;font-size:13px;color:var(--muted);font-weight:700"></div>
+      <a id="cart-bot-link" href="https://t.me/ohana_ansan_bot" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;background:#229ED9;color:#fff;border-radius:12px;padding:13px;text-decoration:none;font-size:14px;font-weight:900;font-family:'Nunito',sans-serif;margin-bottom:10px">
+        ✈️ Открыть бота для получения чека
+      </a>
       <button onclick="closeModal('cart-modal');resetCartModal()" class="modal-primary-btn" style="background:var(--sunset)">Понятно 👍</button>
     </div>
 
@@ -1534,6 +1538,10 @@ nav{
       <div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;text-align:left;margin-bottom:16px;line-height:1.65">
         ⚠️ После перевода пришлите скриншот боту — мы подтвердим и вышлем QR-чек в Telegram.
       </div>
+      <a href="https://t.me/ohana_ansan_bot" target="_blank"
+        style="display:flex;align-items:center;justify-content:center;gap:8px;background:#229ED9;color:#fff;border-radius:12px;padding:13px;text-decoration:none;font-size:14px;font-weight:900;font-family:'Nunito',sans-serif;margin-bottom:10px">
+        ✈️ Открыть бота и отправить скриншот
+      </a>
       <button onclick="closeModal('cart-modal');resetCartModal()" class="modal-primary-btn" style="background:var(--palm)">Понятно 🌺</button>
     </div>
 
@@ -2344,6 +2352,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
   });
 });
+function notify(msg){
+  const el=document.getElementById('notif')||document.createElement('div');
+  if(!el.id){el.id='notif';el.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',3000);
+}
 function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
 function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
 
@@ -3281,6 +3295,11 @@ async function choosePayment(method){
   // Show chosen
   if(method==='card' && cardBlock) cardBlock.style.display = 'block';
   if(method==='transfer' && transferBlock) transferBlock.style.display = 'block';
+  // Update bot link with booking_id so bot knows the context
+  const botLinks = document.querySelectorAll('#bot-link-transfer, [href*="t.me/ohana_ansan_bot"]');
+  botLinks.forEach(link=>{
+    link.href = 'https://t.me/ohana_ansan_bot?start=' + (bookingId||'booking');
+  });
 
   // Disable both buttons so can't change
   successEl.querySelectorAll('button[onclick^="choosePayment"]').forEach(b=>{
@@ -3461,5 +3480,6 @@ function stopCameraScanner(){
 }
 
 </script>
+<div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
 </body>
 </html>
