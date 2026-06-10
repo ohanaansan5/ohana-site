@@ -870,7 +870,7 @@ nav{
       </div>
 
       <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;text-align:center">Выберите способ оплаты:</div>
+        <div class="payment-choice-wrap"><div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;text-align:center">Выберите способ оплаты:</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <button onclick="choosePayment('card')" style="border:2px solid var(--border);background:var(--card);border-radius:14px;padding:20px 16px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.borderColor='var(--sunset)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:32px;margin-bottom:8px">💳</div>
@@ -885,6 +885,7 @@ nav{
         </div>
       </div>
 
+      </div><!-- end payment-choice-wrap -->
       <!-- CARD PAYMENT INFO -->
       <div id="payment-card-block" style="display:none;background:var(--sand2);border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:center">
         <div style="font-size:14px;font-weight:700;line-height:1.7">
@@ -1827,6 +1828,7 @@ function renderMyHistory(){
 // ═══ STAFF CABINET ═══════════════════════════════════
 function renderStaffCabinet(){
   loadDashboardStats();
+  renderStaffBookings();
   // Set default date range (last 30 days)
   const today=new Date();
   const month_ago=new Date();month_ago.setDate(today.getDate()-30);
@@ -2320,7 +2322,13 @@ function showTicketModal(t){
   new QRCode(qrEl,{text:t.code,width:140,height:140,colorDark:'#0E0C0A',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
   document.getElementById('ticket-modal').classList.add('open');
 }
-function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-overlay').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+  });
+});
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('open');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');}
 
 // ═══ MENU ════════════════════════════════════════════
 let cart={};
@@ -3219,20 +3227,48 @@ function copyAccount(){
 }
 
 // ─── PAYMENT CHOICE ───────────────────────────────
+function resetPaymentChoice(){
+  const cardBlock = document.getElementById('payment-card-block');
+  const transferBlock = document.getElementById('payment-transfer-block');
+  if(cardBlock) cardBlock.style.display = 'none';
+  if(transferBlock) transferBlock.style.display = 'none';
+  // Re-enable buttons
+  const successEl = document.getElementById('booking-success');
+  successEl?.querySelectorAll('button[onclick^="choosePayment"]').forEach(b=>{
+    b.style.opacity='1'; b.style.pointerEvents='auto';
+  });
+  // Remove change link
+  successEl?.querySelectorAll('.payment-choice-wrap > div:last-child').forEach(el=>{
+    if(el.querySelector('[onclick*="resetPaymentChoice"]')) el.remove();
+  });
+}
+
 async function choosePayment(method){
   const successEl = document.getElementById('booking-success');
   const bookingId = successEl?.dataset.bookingId || '';
   const contact = successEl?.dataset.contact || '';
   const guestName = successEl?.dataset.guestName || 'Гость';
 
-  // Hide both blocks, show chosen
-  document.getElementById('payment-card-block').style.display = method==='card' ? 'block' : 'none';
-  document.getElementById('payment-transfer-block').style.display = method==='transfer' ? 'block' : 'none';
+  // Hide both blocks first
+  const cardBlock = document.getElementById('payment-card-block');
+  const transferBlock = document.getElementById('payment-transfer-block');
+  if(cardBlock) cardBlock.style.display = 'none';
+  if(transferBlock) transferBlock.style.display = 'none';
 
-  // Disable both buttons
+  // Show chosen
+  if(method==='card' && cardBlock) cardBlock.style.display = 'block';
+  if(method==='transfer' && transferBlock) transferBlock.style.display = 'block';
+
+  // Disable both buttons so can't change
   successEl.querySelectorAll('button[onclick^="choosePayment"]').forEach(b=>{
     b.style.opacity='0.5'; b.style.pointerEvents='none';
   });
+
+  // Add "change" link
+  const changeLink = document.createElement('div');
+  changeLink.style.cssText='text-align:center;margin-top:10px;font-size:12px;color:var(--muted)';
+  changeLink.innerHTML='<span style="cursor:pointer;text-decoration:underline" onclick="resetPaymentChoice()">Изменить способ оплаты</span>';
+  successEl.querySelector('.payment-choice-wrap')?.appendChild(changeLink);
 
   const botUrl = localStorage.getItem('ohana_bot_url') || 'https://adaptable-enjoyment-production.up.railway.app';
 
