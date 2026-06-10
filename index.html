@@ -2270,13 +2270,57 @@ async function loadDashboardStats(){
 
 // ═══ SCANNER ═════════════════════════════════════════
 let scanHistory=[];
-function scanTicket(){
+async function scanTicket(){
   const code=document.getElementById('scan-input').value.trim().toUpperCase();
   if(!code)return;
-  const ticket=TICKETS[code];
-  const g=null; // гости загружаются из Supabase
   const resultEl=document.getElementById('scan-result');
   resultEl.style.display='block';
+  resultEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">⏳ Проверяем...</div>';
+  
+  // Check in Supabase tickets table
+  try{
+    const r = await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/tickets?id=eq.'+code,{
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60'}
+    });
+    const tickets = await r.json();
+    const ticket = tickets&&tickets.length ? tickets[0] : null;
+    
+    if(!ticket){
+      resultEl.className='scan-result invalid';
+      resultEl.innerHTML=`<div class="sr-status">❌</div><h3>Билет не найден</h3><p style="font-size:13px;color:var(--muted)">Код <strong>${code}</strong> не существует.</p>`;
+      addScanHistory(code,'—','invalid');return;
+    }
+    
+    if(ticket.used){
+      resultEl.className='scan-result invalid';
+      resultEl.innerHTML=`<div class="sr-status">⚠️</div><h3>Билет уже использован</h3><p>${ticket.buyer_name||'Гость'} · ${ticket.event_name||''}</p>`;
+      addScanHistory(code,ticket.buyer_name||'Гость','used');return;
+    }
+    
+    // Valid ticket - mark as used
+    await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/tickets?id=eq.'+code,{
+      method:'PATCH',
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({used:true})
+    });
+    
+    resultEl.className='scan-result valid';
+    resultEl.innerHTML=`
+      <div class="sr-status">✅</div>
+      <h3>Билет действителен!</h3>
+      <p style="font-size:15px;font-weight:800">${ticket.buyer_name||'Гость'}</p>
+      <p style="font-size:13px;color:var(--muted)">${ticket.event_name||''} · ${(ticket.event_date||'').replace(/-/g,'.')}</p>
+      <p style="font-size:12px;color:var(--palm);font-weight:700;margin-top:8px">✓ Отмечен как использованный</p>`;
+    addScanHistory(code,ticket.buyer_name||'Гость','valid');
+    return;
+    
+  }catch(e){
+    console.error('Ticket check error:',e);
+  }
+  
+  // Fallback to local
+  const ticket=TICKETS[code];
+  const g=null;
   if(!ticket&&!g){
     resultEl.className='scan-result invalid';
     resultEl.innerHTML=`<div class="sr-status">❌</div><h3>Билет не найден</h3><p style="font-size:13px;color:var(--muted)">Код <strong>${code}</strong> не существует.</p>`;
