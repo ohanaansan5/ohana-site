@@ -2566,7 +2566,11 @@ async function submitBooking(){
       method:'POST',
       headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify(bk)
-    }).then(r=>{console.log('Booking saved, status:',r.status);return r;}).catch(e=>console.error('Booking save FAILED:',e));
+    }).then(async r=>{
+      const txt = await r.text();
+      console.log('Booking saved, status:',r.status, txt);
+      return r;
+    }).catch(e=>console.error('Booking save FAILED:',e));
   }catch(e){console.warn('Booking save error',e);}
   // Notify staff via bot
   try{
