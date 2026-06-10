@@ -1780,6 +1780,7 @@ function staffLogout(){
 
 // ═══ CLIENT CABINET ══════════════════════════════════
 function switchCabTab(id,btn){
+  if(id==='s-drinks'){ renderStaffDrinks(); }
   if(id==='s-settings'){ renderGalleryEditor(); }
   if(id==='s-bookings'){ renderStaffBookings(); }
   if(id==='s-guests'){ renderStaffGuests(); populateOnsiteEvents(); updateOnsiteTotal(); renderWalkInHistory(); }
@@ -1854,6 +1855,7 @@ function renderMyHistory(){
 function renderStaffCabinet(){
   loadDashboardStats();
   renderStaffBookings();
+  renderStaffDrinks();
   // Set default date range (last 30 days)
   const today=new Date();
   const month_ago=new Date();month_ago.setDate(today.getDate()-30);
@@ -1870,17 +1872,54 @@ function renderStaffCabinet(){
   }
   renderStaffDrinks();renderStaffBookings();renderStaffGuests();renderRevenue();renderMenuEditor();
 }
-function renderStaffDrinks(){
-  const colors={new:'var(--accent)',ready:'var(--accent2)',done:'var(--muted)'};
-  const labels={new:'Готовится',ready:'Готово ✓',done:'Выдан'};
-  document.getElementById('staff-drinks-list').innerHTML=STAFF_ORDERS.map((o,i)=>`
-    <div class="order-row">
-      <div class="or-left"><h4>${o.name}</h4><p>${o.items}</p></div>
-      <div class="or-time">${o.time}</div>
-      <button class="or-status" style="background:${o.status==='new'?'var(--accent-dim)':o.status==='ready'?'var(--accent2-dim)':'var(--border)'};color:${colors[o.status]};border:1px solid ${colors[o.status]}" onclick="toggleOrderStatus(${i})">${labels[o.status]}</button>
-    </div>`).join('');
-  document.getElementById('drinks-count').textContent=STAFF_ORDERS.filter(o=>o.status!=='done').length;
+async function renderStaffDrinks(){
+  const el = document.getElementById('staff-drinks-list');
+  const cnt = document.getElementById('drinks-count');
+  if(!el) return;
+  try{
+    const today = new Date().toISOString().split('T')[0];
+    const r = await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/orders?created_at=gte.' + today + 'T00:00:00&order=created_at.desc&limit=50',{
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60'}
+    });
+    const orders = await r.json();
+    if(cnt) cnt.textContent = Array.isArray(orders) ? orders.filter(o=>o.status!=='done').length : 0;
+    if(!Array.isArray(orders)||!orders.length){
+      el.innerHTML='<div class="empty-state"><div class="es-icon">☕</div>Заказов пока нет</div>';
+      return;
+    }
+    const colors={new:'var(--sunset)',making:'var(--ocean)',ready:'var(--palm)',done:'var(--muted)'};
+    const labels={new:'Новый',making:'Готовится',ready:'Готово ✓',done:'Выдан'};
+    el.innerHTML = orders.map(o=>`
+      <div class="order-row">
+        <div class="or-left">
+          <h4>${o.guest||'Гость'}</h4>
+          <p>${Array.isArray(o.items)?o.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', '):''}</p>
+          <p style="font-size:11px;color:var(--muted)">${o.id} · ${o.total?o.total.toLocaleString('ru-RU')+' ₩':''} · ${o.pay_method==='transfer'?'📲 Перевод':'💳 Карта'}</p>
+        </div>
+        <div class="or-time">${new Date(o.created_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})}</div>
+        <button class="or-status" style="background:${o.status==='ready'?'var(--accent2-dim)':o.status==='done'?'var(--border)':'var(--accent-dim)'};color:${colors[o.status]||'var(--sunset)'};border:1px solid ${colors[o.status]||'var(--sunset)'}" 
+          onclick="updateOrderStatus('${o.id}','${o.status}')">${labels[o.status]||o.status}</button>
+      </div>`).join('');
+  }catch(e){
+    el.innerHTML='<div class="empty-state"><div class="es-icon">☕</div>Не удалось загрузить заказы</div>';
+    console.error('Orders load error:',e);
+  }
 }
+
+async function updateOrderStatus(orderId, currentStatus){
+  const next = {new:'making', making:'ready', ready:'done', done:'new'};
+  const newStatus = next[currentStatus] || 'making';
+  try{
+    await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/orders?id=eq.' + orderId,{
+      method:'PATCH',
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({status:newStatus})
+    });
+    renderStaffDrinks();
+  }catch(e){console.error('Status update error:',e);}
+}
+
+
 function toggleOrderStatus(i){const s=STAFF_ORDERS[i].status;STAFF_ORDERS[i].status=s==='new'?'ready':s==='ready'?'done':'new';renderStaffDrinks();}
 async function renderStaffBookings(){
   const el=document.getElementById('staff-bookings-list');
