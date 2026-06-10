@@ -1703,7 +1703,23 @@ function clientLogin(){
   const pass=document.getElementById('login-pass').value;
   if(!email||!pass){alert('Введите email и пароль');return;}
   if(USERS[email]&&USERS[email].password===pass){currentUser=USERS[email];onClientLogin();}
-  else{alert('Неверный email или пароль.\nДля демо нажмите «демо-вход»');}
+  else{
+    if(!USERS[email]){
+      if(confirm('Аккаунт не найден.\nЗарегистрироваться с этим email?')){
+        const rn=document.getElementById('reg-name');
+        const re=document.getElementById('reg-email');
+        if(re) re.value=email;
+        document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+        const tabs=document.querySelectorAll('.auth-tab');
+        if(tabs[1]) tabs[1].classList.add('active');
+        document.querySelectorAll('.auth-panel').forEach(p=>p.style.display='none');
+        const panels=document.querySelectorAll('.auth-panel');
+        if(panels[1]) panels[1].style.display='block';
+      }
+    } else {
+      alert('Неверный пароль.');
+    }
+  }
 }
 
 function clientRegister(){
@@ -2541,6 +2557,7 @@ async function submitBooking(){
     comment:comment||null,
     pay_method:selectedPayMethod||'card',
   };
+  console.log('Submitting booking:', JSON.stringify(bk));
   BOOKINGS.push({...bk,user:email,type,name});
   // Save to Supabase
   try{
@@ -2548,13 +2565,12 @@ async function submitBooking(){
       method:'POST',
       headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify(bk)
-    });
+    }).then(r=>{console.log('Booking saved, status:',r.status);return r;}).catch(e=>console.error('Booking save FAILED:',e));
   }catch(e){console.warn('Booking save error',e);}
   // Notify staff via bot
   try{
-    const botUrl=localStorage.getItem('ohana_bot_url');
-    if(botUrl){
-      fetch(botUrl+'/new-booking',{
+    const botUrl=localStorage.getItem('ohana_bot_url')||'https://adaptable-enjoyment-production.up.railway.app';
+    fetch(botUrl+'/new-booking',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({...bk,booking_type:type})
@@ -2578,6 +2594,9 @@ async function submitBooking(){
   successEl.dataset.bookingId = bk.id;
   successEl.dataset.contact = bk.contact||'';
   successEl.dataset.guestName = name;
+  successEl.dataset.bookingType = type||'';
+  successEl.dataset.eventDate = date||'';
+  successEl.dataset.eventTime = selectedTime||'';
 }
 
 // ═══ UTILS ═══════════════════════════════════════════
@@ -3275,31 +3294,49 @@ async function choosePayment(method){
   if(method === 'transfer'){
     // Notify guest via bot with bank details + pending status
     try{
-      await fetch(botUrl+'/payment-method',{
+      const resp = await fetch(botUrl+'/payment-method',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           booking_id: bookingId,
           contact: contact,
           guest_name: guestName,
-          method: 'transfer'
+          method: 'transfer',
+          booking_type: successEl.dataset.bookingType||'',
+          event_date: successEl.dataset.eventDate||'',
+          booking_time: successEl.dataset.eventTime||''
         })
       });
-    }catch(e){console.warn('Bot notify error:',e);}
+      const result = await resp.json();
+      console.log('Bot response:', result);
+      if(result.ok) notify('📱 Реквизиты отправлены в Telegram!');
+    }catch(e){
+      console.error('Bot error:',e);
+      notify('⚠️ Бот недоступен, но реквизиты показаны выше');
+    }
   } else {
-    // Card - notify staff
+    // Card - notify staff + guest
     try{
-      await fetch(botUrl+'/payment-method',{
+      const resp = await fetch(botUrl+'/payment-method',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           booking_id: bookingId,
           contact: contact,
           guest_name: guestName,
-          method: 'card'
+          method: 'card',
+          booking_type: successEl.dataset.bookingType||'',
+          event_date: successEl.dataset.eventDate||'',
+          booking_time: successEl.dataset.eventTime||''
         })
       });
-    }catch(e){console.warn('Bot notify error:',e);}
+      const result = await resp.json();
+      console.log('Bot card response:', result);
+      if(result.ok) notify('📱 Уведомление отправлено в Telegram!');
+    }catch(e){
+      console.error('Bot card error:',e);
+      notify('⚠️ Бот временно недоступен');
+    }
   }
 }
 
