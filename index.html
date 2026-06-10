@@ -2574,9 +2574,8 @@ async function submitBooking(){
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({...bk,booking_type:type})
-      }).catch(()=>{});
-    }
-  }catch(e){}
+      }).catch(e=>console.warn('Bot error:',e));
+  }catch(e){console.warn('Bot notify error:',e);}
   // Show payment choice
   const successEl = document.getElementById('booking-success');
   const nameEl = document.getElementById('booking-success-name');
