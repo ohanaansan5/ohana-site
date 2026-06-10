@@ -1,0 +1,18 @@
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+
+[[redirects]]
+  from = "/kitchen"
+  to = "/ohana_kitchen.html"
+  status = 200
+
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>OHANA — Кухонный экран</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#FDF6E3;--sand2:#FFF0C8;--sand3:#FFE4A0;
+  --card:#fff;--border:#E8D9B8;--border2:#C8B080;
+  --text:#2C1A08;--mid:#5C3A18;--muted:#9A7848;
+  --sunset:#E8651A;--palm:#3D7A4A;--hibiscus:#D4326A;--ocean:#1A6B8A;--gold:#C49A28;
+}
+body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* TOP BAR */
+.topbar{background:var(--text);color:var(--sand);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{font-size:20px;font-weight:900}
+.topbar-logo span{color:var(--sand3)}
+.topbar-time{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+.topbar-count{background:var(--sunset);color:#fff;border-radius:99px;padding:4px 12px;font-size:13px;font-weight:800}
+
+/* TABS */
+.tabs{display:flex;background:var(--sand2);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:12px 18px;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;font-family:'Nunito',sans-serif}
+.tab.active{color:var(--sunset);border-bottom-color:var(--sunset);background:var(--sand)}
+.tab .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:99px;padding:0 5px;font-size:11px;font-weight:900;margin-left:5px}
+.tab.active .cnt{background:var(--sunset);color:#fff}
+.tab:not(.active) .cnt{background:var(--border2);color:var(--mid)}
+
+/* MAIN */
+.main{display:flex;gap:0;min-height:calc(100vh - 108px)}
+
+/* QUEUE */
+.queue{flex:1;padding:12px;overflow-y:auto}
+.queue-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.queue-empty .ei{font-size:48px;margin-bottom:12px}
+.queue-empty p{font-size:15px;font-weight:700}
+
+/* ORDER CARD */
+.order-card{border-radius:16px;padding:14px 16px;margin-bottom:10px;border:2px solid;transition:all .2s}
+.order-card.s-new{background:#FFF3E0;border-color:var(--sunset)}
+.order-card.s-making{background:#E8F5E9;border-color:var(--palm)}
+.order-card.s-ready{background:#E3F2FD;border-color:var(--ocean)}
+.order-card.s-done{background:#F5F5F5;border-color:var(--border2);opacity:.55}
+.oc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.oc-name{font-size:16px;font-weight:900}
+.oc-badges{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.badge{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:800;white-space:nowrap}
+.b-site{background:#E8F0FE;color:#1A47A8}
+.b-place{background:#FFF3CD;color:#855800}
+.b-unpaid{background:#FFEBEE;color:#C62828}
+.b-paid{background:#E8F5E9;color:#1B5E20}
+.b-partial{background:#FFF8E1;color:#E65100}
+.b-discount{background:#F3E5F5;color:#6A1B9A}
+.oc-items{font-size:13px;color:var(--mid);line-height:1.8;font-weight:700;margin-bottom:8px}
+.item-line{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed var(--border)}
+.item-line:last-child{border-bottom:none}
+.oc-totals{background:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px}
+.oc-totals .trow{display:flex;justify-content:space-between;padding:2px 0}
+.oc-totals .trow.strike{text-decoration:line-through;color:var(--muted)}
+.oc-totals .trow.bold{font-weight:900;font-size:15px;border-top:1px dashed var(--border);margin-top:4px;padding-top:6px}
+.oc-totals .trow.disc{color:#6A1B9A;font-weight:800}
+.oc-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.oc-time{font-size:11px;color:var(--muted);font-weight:700}
+.oc-timer{font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px}
+.oc-timer.slow{background:#FFEBEE;color:#C62828}
+.oc-timer.ok{background:#E8F5E9;color:#2E7D32}
+
+/* ACTION BUTTONS ROW */
+.action-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.act-btn{flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:2px solid;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;text-align:center;white-space:nowrap}
+.act-btn:hover{filter:brightness(.93)}
+.btn-discount{background:#F3E5F5;color:#6A1B9A;border-color:#9C27B0}
+.btn-pay{background:#E8F5E9;color:var(--palm);border-color:var(--palm)}
+.btn-pay.unpaid{background:#FFEBEE;color:#C62828;border-color:#C62828}
+.btn-later{background:#FFF8E1;color:#E65100;border-color:#FF9800}
+
+/* STATUS BUTTONS */
+.status-btns{display:flex;gap:5px}
+.status-btn{flex:1;padding:9px 4px;border-radius:10px;border:2px solid;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;text-align:center}
+.s-btn-new{background:#FFF3E0;color:var(--sunset);border-color:var(--sunset)}
+.s-btn-new.active{background:var(--sunset);color:#fff}
+.s-btn-making{background:#E8F5E9;color:var(--palm);border-color:var(--palm)}
+.s-btn-making.active{background:var(--palm);color:#fff}
+.s-btn-ready{background:#E3F2FD;color:var(--ocean);border-color:var(--ocean)}
+.s-btn-ready.active{background:var(--ocean);color:#fff}
+.s-btn-done{background:#F5F5F5;color:var(--muted);border-color:var(--border2)}
+.s-btn-done.active{background:var(--border2);color:var(--mid)}
+.s-btn-cancel{background:#FFEBEE;color:#C62828;border-color:#EF9A9A;font-size:11px}
+.s-btn-cancel:hover{background:#FFCDD2}
+
+/* NEW ORDER PANEL */
+.new-panel{width:300px;flex-shrink:0;background:var(--card);border-left:2px solid var(--border);display:flex;flex-direction:column}
+.new-panel-head{padding:12px 14px;border-bottom:2px solid var(--border);background:var(--sand2)}
+.new-panel-head h2{font-size:15px;font-weight:900;margin-bottom:2px}
+.new-panel-head p{font-size:11px;color:var(--muted);font-weight:700}
+.name-row{padding:10px 14px;border-bottom:1px solid var(--border)}
+.name-row input{width:100%;background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);outline:none}
+.name-row input:focus{border-color:var(--sunset)}
+.menu-scroll{flex:1;overflow-y:auto;padding:6px}
+.menu-cat-label{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:7px 8px 3px;margin-top:2px}
+.menu-btn{width:100%;display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:var(--sand);border:1.5px solid var(--border);border-radius:10px;margin-bottom:5px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.menu-btn:hover{border-color:var(--sunset);background:var(--sand2)}
+.menu-btn .mn{font-size:13px;font-weight:800;color:var(--text);text-align:left}
+.menu-btn .mp{font-size:12px;font-weight:900;color:var(--sunset)}
+.menu-btn .mq{min-width:22px;height:22px;background:var(--sunset);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;padding:0 4px}
+.basket{background:var(--sand2);border-top:2px solid var(--border);padding:10px 14px}
+.basket h3{font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.basket-items{margin-bottom:8px;max-height:120px;overflow-y:auto}
+.basket-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;padding:3px 0;border-bottom:1px dashed var(--border)}
+.basket-item:last-child{border-bottom:none}
+.bi-name{flex:1;color:var(--text)}
+.bi-qty{color:var(--muted);margin:0 5px}
+.bi-price{color:var(--sunset);font-weight:900}
+.bi-del{background:none;border:none;color:var(--hibiscus);cursor:pointer;font-size:15px;padding:0 0 0 5px;font-weight:900}
+.basket-empty{font-size:12px;color:var(--muted);text-align:center;padding:6px 0;font-weight:700}
+.basket-total{display:flex;justify-content:space-between;font-size:14px;font-weight:900;padding-top:7px;border-top:2px solid var(--border);margin-bottom:8px}
+.accept-btn{width:100%;padding:13px;background:var(--sunset);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 16px rgba(232,101,26,.35);transition:all .2s}
+.accept-btn:hover{background:#c9540e}
+.accept-btn:disabled{background:var(--border2);color:var(--muted);box-shadow:none;cursor:default}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:rgba(44,26,8,.55);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:60px 16px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(44,26,8,.25);position:relative}
+.modal h2{font-size:18px;font-weight:900;margin-bottom:6px;color:var(--text)}
+.modal .msub{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:18px}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);font-weight:900;line-height:1}
+.modal-close:hover{color:var(--text)}
+.mform-group{margin-bottom:14px}
+.mform-group label{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.mform-group input,.mform-group select{width:100%;background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);outline:none}
+.mform-group input:focus,.mform-group select:focus{border-color:var(--sunset)}
+.disc-presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+.disc-preset{padding:7px 14px;border:2px solid var(--border);border-radius:99px;background:var(--sand);font-size:13px;font-weight:800;cursor:pointer;color:var(--mid);transition:all .2s;font-family:'Nunito',sans-serif}
+.disc-preset:hover,.disc-preset.active{background:#F3E5F5;border-color:#9C27B0;color:#6A1B9A}
+.disc-result{background:var(--sand2);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:14px}
+.disc-result .dr{display:flex;justify-content:space-between;padding:2px 0;font-weight:700}
+.disc-result .dr.final{font-weight:900;font-size:16px;color:var(--sunset);border-top:1px dashed var(--border);margin-top:6px;padding-top:8px}
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.pay-method{padding:12px;border:2px solid var(--border);border-radius:12px;background:var(--sand);text-align:center;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.pay-method:hover{border-color:var(--palm)}
+.pay-method.active{border-color:var(--palm);background:#E8F5E9}
+.pay-method .pm-icon{font-size:24px;margin-bottom:4px}
+.pay-method .pm-name{font-size:12px;font-weight:800;color:var(--text)}
+.debt-summary{background:#FFEBEE;border-radius:10px;padding:12px 14px;margin-bottom:16px;border:1.5px solid #FFCDD2}
+.debt-summary p{font-size:13px;font-weight:700;color:#C62828;line-height:1.6}
+.modal-actions{display:flex;gap:8px}
+.modal-btn{flex:1;padding:13px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;cursor:pointer;transition:all .2s}
+.modal-btn-primary{background:var(--sunset);color:#fff;box-shadow:0 3px 12px rgba(232,101,26,.3)}
+.modal-btn-primary:hover{background:#c9540e}
+.modal-btn-primary.green{background:var(--palm);box-shadow:0 3px 12px rgba(61,122,74,.3)}
+.modal-btn-primary.green:hover{background:#2f6139}
+.modal-btn-secondary{background:var(--sand2);color:var(--mid);border:2px solid var(--border)}
+.modal-btn-secondary:hover{border-color:var(--border2)}
+.debt-list{margin-top:10px}
+.debt-item{background:var(--card);border:2px solid #FFCDD2;border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.debt-item-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.debt-item-head h4{font-size:14px;font-weight:900}
+.debt-amount{font-size:15px;font-weight:900;color:#C62828}
+.debt-info{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px}
+.debt-pay-btn{width:100%;padding:9px;background:var(--palm);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif}
+
+/* DEBTS TAB */
+.debts-section{padding:12px}
+.debts-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.debts-header h2{font-size:16px;font-weight:900}
+.total-debt{font-size:14px;font-weight:900;color:#C62828;background:#FFEBEE;padding:5px 12px;border-radius:99px}
+
+/* NOTIFY */
+.notif{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.notif.show{opacity:1}
+
+@media(max-width:620px){
+  .new-panel{width:100%;border-left:none;border-top:2px solid var(--border);max-height:55vh}
+  .main{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">OHANA <span>🌺</span></div>
+  <div class="topbar-time" id="clock">--:--</div>
+  <div class="topbar-count" id="active-count">0 активных</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('all',this)">Все <span class="cnt" id="cnt-all">0</span></button>
+  <button class="tab" onclick="showTab('new',this)">Новые <span class="cnt" id="cnt-new">0</span></button>
+  <button class="tab" onclick="showTab('making',this)">Готовятся <span class="cnt" id="cnt-making">0</span></button>
+  <button class="tab" onclick="showTab('ready',this)">Готово 🔔 <span class="cnt" id="cnt-ready">0</span></button>
+  <button class="tab" onclick="showTab('done',this)">Выданы <span class="cnt" id="cnt-done">0</span></button>
+  <button class="tab" onclick="showTab('debts',this)">Долги 💸 <span class="cnt" id="cnt-debts">0</span></button>
+</div>
+
+<div class="main">
+  <!-- QUEUE -->
+  <div class="queue" id="queue"></div>
+
+  <!-- NEW ORDER PANEL -->
+  <div class="new-panel">
+    <div class="new-panel-head">
+      <h2>➕ Принять заказ</h2>
+      <p>Выбери позиции → Принять</p>
+    </div>
+    <div class="name-row">
+      <input type="text" id="guest-name" placeholder="Имя / стол (необязательно)" maxlength="30">
+    </div>
+    <div class="menu-scroll" id="menu-scroll"></div>
+    <div class="basket">
+      <h3>Корзина</h3>
+      <div class="basket-items" id="basket-items"></div>
+      <div class="basket-disc-row" style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">Скидка %</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;flex:1">
+          <button class="disc-quick" onclick="setQuickDisc(0,this)" style="padding:4px 8px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand3);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--mid)">Нет</button>
+          <button class="disc-quick" onclick="setQuickDisc(5,this)" style="padding:4px 8px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--mid)">5%</button>
+          <button class="disc-quick" onclick="setQuickDisc(10,this)" style="padding:4px 8px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--mid)">10%</button>
+          <button class="disc-quick" onclick="setQuickDisc(20,this)" style="padding:4px 8px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--mid)">20%</button>
+          <input type="number" id="basket-disc-input" placeholder="%" min="0" max="100" style="width:44px;border:1.5px solid var(--border);border-radius:8px;padding:3px 6px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;background:var(--sand);outline:none;color:var(--text)" oninput="setQuickDiscCustom(this.value)">
+        </div>
+      </div>
+      <div id="basket-disc-line" style="display:none;font-size:12px;font-weight:800;color:#6A1B9A;margin-bottom:4px;display:flex;justify-content:space-between">
+        <span>Скидка <span id="basket-disc-pct">0</span>%:</span><span id="basket-disc-amt">−0 ₩</span>
+      </div>
+      <div class="basket-total"><span>К оплате:</span><span id="basket-total">0 ₩</span></div>
+      <button class="accept-btn" id="accept-btn" onclick="openAcceptModal()" disabled>Принять заказ 🌺</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ПРИНЯТЬ ЗАКАЗ (скидка + оплата) ═══ -->
+<div class="modal-overlay" id="modal-accept">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-accept')">✕</button>
+    <h2>Оформить заказ</h2>
+    <div class="msub" id="accept-msub">Гость: —</div>
+
+    <!-- СКИДКА -->
+    <div class="mform-group">
+      <label>Скидка</label>
+      <div class="disc-presets">
+        <button class="disc-preset" onclick="setDisc(0,this)">Нет</button>
+        <button class="disc-preset" onclick="setDisc(5,this)">5%</button>
+        <button class="disc-preset" onclick="setDisc(10,this)">10%</button>
+        <button class="disc-preset" onclick="setDisc(15,this)">15%</button>
+        <button class="disc-preset" onclick="setDisc(20,this)">20%</button>
+        <button class="disc-preset" onclick="setDisc(50,this)">50%</button>
+      </div>
+      <input type="number" id="disc-custom" placeholder="Или введи % вручную" min="0" max="100" oninput="setDiscCustom(this.value)">
+    </div>
+
+    <div class="disc-result" id="disc-result">
+      <div class="dr"><span>Сумма заказа:</span><span id="dr-original">0 ₩</span></div>
+      <div class="dr" id="dr-disc-row" style="display:none"><span>Скидка <span id="dr-disc-pct">0</span>%:</span><span id="dr-disc-amt" style="color:#6A1B9A">−0 ₩</span></div>
+      <div class="dr final"><span>К оплате:</span><span id="dr-final">0 ₩</span></div>
+    </div>
+
+    <!-- ОПЛАТА -->
+    <div class="mform-group">
+      <label>Способ оплаты</label>
+      <div class="pay-methods">
+        <div class="pay-method active" onclick="selectPay('card',this)">
+          <div class="pm-icon">💳</div>
+          <div class="pm-name">Карта</div>
+        </div>
+        <div class="pay-method" onclick="selectPay('cash',this)">
+          <div class="pm-icon">💵</div>
+          <div class="pm-name">Наличные</div>
+        </div>
+        <div class="pay-method" onclick="selectPay('kakao',this)">
+          <div class="pm-icon">📱</div>
+          <div class="pm-name">Оплата переводом</div>
+        </div>
+        <div class="pay-method" onclick="selectPay('later',this)">
+          <div class="pm-icon">⏰</div>
+          <div class="pm-name">Оплатит позже</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК "ОПЛАТИТ ПОЗЖЕ" -->
+    <div id="later-block" style="display:none">
+      <div class="debt-summary">
+        <p>⚠️ Заказ будет отмечен как <strong>неоплаченный</strong>. Укажи контакт гостя — напомним когда придёт оплатить.</p>
+      </div>
+      <div class="mform-group">
+        <label>Имя / контакт гостя</label>
+        <input type="text" id="debtor-name" placeholder="Имя или @telegram">
+      </div>
+      <div class="mform-group">
+        <label>Срок оплаты</label>
+        <select id="debtor-deadline">
+          <option value="today">Сегодня до закрытия</option>
+          <option value="tomorrow">Завтра</option>
+          <option value="week">В течение недели</option>
+          <option value="next_visit">При следующем визите</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('modal-accept')">Отмена</button>
+      <button class="modal-btn modal-btn-primary green" id="confirm-accept-btn" onclick="confirmAccept()">✅ Подтвердить оплату</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ОПЛАТА ДОЛГА ═══ -->
+<div class="modal-overlay" id="modal-pay-debt">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-pay-debt')">✕</button>
+    <h2>💸 Оплата долга</h2>
+    <div class="msub" id="debt-msub">—</div>
+    <div class="debt-summary" id="debt-pay-info"></div>
+    <div class="mform-group">
+      <label>Способ оплаты</label>
+      <div class="pay-methods">
+        <div class="pay-method active" onclick="selectDebtPay('card',this)">
+          <div class="pm-icon">💳</div><div class="pm-name">Карта</div>
+        </div>
+        <div class="pay-method" onclick="selectDebtPay('cash',this)">
+          <div class="pm-icon">💵</div><div class="pm-name">Наличные</div>
+        </div>
+        <div class="pay-method" onclick="selectDebtPay('kakao',this)">
+          <div class="pm-icon">📱</div><div class="pm-name">Оплата переводом</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('modal-pay-debt')">Отмена</button>
+      <button class="modal-btn modal-btn-primary green" onclick="confirmDebtPay()">✅ Долг оплачен</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ИЗМЕНИТЬ ОПЛАТУ ═══ -->
+<div class="modal-overlay" id="modal-change-pay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-change-pay')">✕</button>
+    <h2>💳 Статус оплаты</h2>
+    <div class="msub" id="changepay-msub">—</div>
+    <div class="disc-result" id="changepay-info"></div>
+    <div class="pay-methods" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div class="pay-method" onclick="selectChangePay('card',this)">
+        <div class="pm-icon">💳</div><div class="pm-name">Карта</div>
+      </div>
+      <div class="pay-method" onclick="selectChangePay('cash',this)">
+        <div class="pm-icon">💵</div><div class="pm-name">Наличные</div>
+      </div>
+      <div class="pay-method" onclick="selectChangePay('kakao',this)">
+        <div class="pm-icon">📱</div><div class="pm-name">Оплата переводом</div>
+      </div>
+      <div class="pay-method" onclick="selectChangePay('later',this)">
+        <div class="pm-icon">⏰</div><div class="pm-name">Долг</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('modal-change-pay')">Отмена</button>
+      <button class="modal-btn modal-btn-primary green" onclick="confirmChangePay()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+const MENU=[
+  {id:'m1',name:'Маленький американо',price:4000,cat:'coffee'},
+  {id:'m2',name:'Большой американо',price:5000,cat:'coffee'},
+  {id:'m3',name:'Капучино',price:5500,cat:'coffee'},
+  {id:'m4',name:'Флэт уайт',price:5500,cat:'coffee'},
+  {id:'m5',name:'Латте',price:6000,cat:'coffee'},
+  {id:'m6',name:'Бородинский кофе',price:6500,cat:'coffee'},
+  {id:'m7',name:'Горячий шоколад',price:5500,cat:'noncoffee'},
+  {id:'m8',name:'Матча латте',price:6000,cat:'noncoffee'},
+  {id:'m9',name:'Чай',price:4500,cat:'noncoffee'},
+  {id:'m10',name:'Домашний лимонад',price:5500,cat:'lemonade'},
+  {id:'m11',name:'Глинтвейн б/а',price:6000,cat:'lemonade'},
+  {id:'m12',name:'Молочный коктейль',price:6500,cat:'lemonade'},
+  {id:'m13',name:'Кусочек торта',price:5500,cat:'food'},
+  {id:'m14',name:'Пирожок',price:4000,cat:'food'},
+  {id:'m15',name:'Блинчик',price:4500,cat:'food'},
+  {id:'m16',name:'Детский набор',price:5000,cat:'food'},
+];
+const CAT_LABELS={coffee:'☕ Кофе',noncoffee:'🍵 Без кофе',lemonade:'🍋 Лимонады',food:'🥐 Выпечка'};
+const PAY_LABELS={card:'💳 Карта',cash:'💵 Наличные',kakao:'📲 Оплата переводом',later:'⏰ Оплатит позже'};
+
+let orders=[];
+let basket={};
+let currentTab='all';
+let orderIdCounter=1;
+let currentDisc=0;
+let currentPayMethod='card';
+let currentDebtOrderId=null;
+let currentDebtPayMethod='card';
+let currentChangePayOrderId=null;
+let currentChangePayMethod='card';
+
+// ─── SUPABASE ──────────────────────────────────────
+const SUPA_URL='https://gaqzqfgpatelsrbyyofl.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60';
+const supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+function makeCode(){
+  const ts=Date.now().toString(36).toUpperCase();
+  const rnd=Math.random().toString(36).substr(2,3).toUpperCase();
+  return '#'+ts.slice(-3)+rnd;
+}
+async function loadOrders(){
+  const {data,error}=await supa.from('orders').select('*').order('created_at',{ascending:false}).limit(100);
+  if(error){console.error('Load error',error);seedLocalDemo();return;}
+  orders=(data||[]).map(dbToOrder);
+  renderQueue();
+  loadMenuFromDB();
+}
+async function loadMenuFromDB(){
+  const {data}=await supa.from('menu').select('*').eq('available',true).order('category');
+  if(data&&data.length){
+    MENU.length=0;
+    data.forEach(m=>MENU.push({id:m.id,name:m.name,desc:m.description||'',price:m.price,cat:m.category}));
+    renderMenuPanel();renderBasket();
+  }
+}
+function dbToOrder(r){
+  return {
+    id:r.id,guest:r.guest||'Гость',items:r.items||[],
+    original:r.original,discount:r.discount||0,total:r.total,
+    time:new Date(r.created_at).getTime(),status:r.status,
+    source:r.source||'place',paid:r.paid||false,payMethod:r.pay_method||'card',
+    debtorName:r.debtor_name,debtorDeadline:r.debtor_deadline,
+  };
+}
+function orderToDB(o){
+  return {
+    id:o.id,guest:o.guest,items:o.items,original:o.original,
+    discount:o.discount||0,total:o.total,status:o.status,source:o.source,
+    paid:o.paid,pay_method:o.payMethod||'card',
+    debtor_name:o.debtorName||null,debtor_deadline:o.debtorDeadline||null,
+  };
+}
+async function saveOrder(order){
+  const {error}=await supa.from('orders').upsert(orderToDB(order));
+  if(error) console.error('Save error',error);
+}
+async function deleteOrder(id){
+  await supa.from('orders').delete().eq('id',id);
+}
+function subscribeRealtime(){
+  supa.channel('ohana-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},payload=>{
+      const row=payload.new;
+      if(payload.eventType==='DELETE'){orders=orders.filter(o=>o.id!==payload.old.id);}
+      else{const idx=orders.findIndex(o=>o.id===row.id);const m=dbToOrder(row);if(idx>=0)orders[idx]=m;else orders.unshift(m);}
+      renderQueue();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'menu'},()=>{loadMenuFromDB();})
+    .subscribe();
+}
+function seedLocalDemo(){
+  orders=[
+    {id:'#DEMO1',guest:'Анна',items:[{name:'Латте',qty:1,price:6000},{name:'Блинчик',qty:2,price:4500}],original:15000,discount:0,total:15000,time:Date.now()-480000,status:'new',source:'site',paid:true,payMethod:'card'},
+    {id:'#DEMO2',guest:'Стол 3',items:[{name:'Капучино',qty:2,price:5500}],original:11000,discount:0,total:11000,time:Date.now()-240000,status:'making',source:'place',paid:false,payMethod:'later'},
+  ];
+  renderQueue();
+}
+
+// ─── CLOCK ─────────────────────────────────────────
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+setInterval(updateClock,1000); updateClock();
+
+function fmtMoney(v){
+  if(v>=1000000) return (v/1000000).toFixed(1)+' млн ₩';
+  if(v>=1000) return Math.round(v/1000)+' тыс ₩';
+  return v+' ₩';
+}
+function elapsed(ts){
+  const m=Math.floor((Date.now()-ts)/60000);
+  if(m<1)return'только что';
+  if(m<60)return m+'мин';
+  return Math.floor(m/60)+'ч '+m%60+'мин';
+}
+
+// ─── TABS ─────────────────────────────────────────
+function showTab(tab,btn){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderQueue();
+}
+
+// ─── RENDER QUEUE ─────────────────────────────────
+function renderQueue(){
+  const debts=orders.filter(o=>!o.paid);
+  const active=orders.filter(o=>o.status!=='done');
+  document.getElementById('active-count').textContent=active.length+' активных';
+  ['all','new','making','ready','done'].forEach(s=>{
+    const n=s==='all'?orders.filter(o=>o.status!=='done').length:orders.filter(o=>o.status===s).length;
+    document.getElementById('cnt-'+s).textContent=n;
+  });
+  document.getElementById('cnt-debts').textContent=debts.length;
+
+  const el=document.getElementById('queue');
+
+  // DEBTS TAB
+  if(currentTab==='debts'){
+    const totalDebt=debts.reduce((s,o)=>s+o.total,0);
+    if(!debts.length){
+      el.innerHTML='<div class="queue-empty"><div class="ei">🎉</div><p>Нет неоплаченных заказов!</p></div>';
+      return;
+    }
+    el.innerHTML=`<div class="debts-section">
+      <div class="debts-header">
+        <h2>Неоплаченные заказы</h2>
+        <span class="total-debt">Итого: ${totalDebt.toLocaleString('ru-RU')} ₩</span>
+      </div>
+      <div class="debt-list">`+
+      debts.map(o=>`
+        <div class="debt-item">
+          <div class="debt-item-head">
+            <h4>${o.guest||'Гость'} ${o.id}</h4>
+            <span class="debt-amount">${o.total.toLocaleString('ru-RU')} ₩</span>
+          </div>
+          <div class="debt-info">
+            ${o.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}<br>
+            ${o.debtorName?'Контакт: '+o.debtorName+' · ':''} 
+            ${o.debtorDeadline?'Срок: '+deadlineLabel(o.debtorDeadline):''}
+          </div>
+          <button class="debt-pay-btn" onclick="openDebtPayModal('${o.id}')">💸 Принять оплату</button>
+        </div>`).join('')+
+      '</div></div>';
+    return;
+  }
+
+  let filtered=currentTab==='all'?orders:orders.filter(o=>o.status===currentTab);
+  if(!filtered.length){
+    el.innerHTML='<div class="queue-empty"><div class="ei">'+(currentTab==='done'?'✅':'☕')+'</div><p>Нет заказов</p></div>';
+    return;
+  }
+  const order_map={new:0,making:1,ready:2,done:3};
+  filtered=[...filtered].sort((a,b)=>order_map[a.status]!==order_map[b.status]?order_map[a.status]-order_map[b.status]:a.time-b.time);
+
+  el.innerHTML=filtered.map(o=>`
+    <div class="order-card s-${o.status}">
+      <div class="oc-head">
+        <div class="oc-name">${o.guest||'Гость'}</div>
+        <div class="oc-badges">
+          <span class="badge ${o.source==='site'?'b-site':'b-place'}">${o.source==='site'?'🌐 Сайт':'🏠 Место'}</span>
+          <span class="badge ${o.paid?'b-paid':'b-unpaid'}">${o.paid?'✅ '+PAY_LABELS[o.payMethod||'card']:'❌ Не оплачен'}</span>
+          ${o.discount>0?`<span class="badge b-discount">−${o.discount}%</span>`:''}
+        </div>
+      </div>
+      <div class="oc-items">
+        ${o.items.map(i=>`<div class="item-line"><span>${i.name}${i.qty>1?' ×'+i.qty:''}</span><span>${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span></div>`).join('')}
+      </div>
+      ${o.discount>0?`
+      <div class="oc-totals">
+        <div class="trow strike"><span>Без скидки:</span><span>${o.original.toLocaleString('ru-RU')} ₩</span></div>
+        <div class="trow disc"><span>Скидка ${o.discount}%:</span><span>−${(o.original-o.total).toLocaleString('ru-RU')} ₩</span></div>
+        <div class="trow bold"><span>Итого:</span><span>${o.total.toLocaleString('ru-RU')} ₩</span></div>
+      </div>`:`
+      <div class="oc-footer">
+        <span class="oc-time">${o.id} · ${elapsed(o.time)}</span>
+        ${o.status!=='done'?`<span class="oc-timer ${Math.floor((Date.now()-o.time)/60000)>10?'slow':'ok'}">${Math.floor((Date.now()-o.time)/60000)>10?'⚠️':''} ${Math.floor((Date.now()-o.time)/60000)}мин</span>`:''}
+        <span style="margin-left:auto;font-size:14px;font-weight:900">${o.total.toLocaleString('ru-RU')} ₩</span>
+      </div>`}
+      <div class="action-row">
+        <button class="act-btn btn-discount" onclick="openDiscountModal('${o.id}')">🏷 Скидка</button>
+        <button class="act-btn ${o.paid?'btn-pay':'btn-pay unpaid'}" onclick="openChangePayModal('${o.id}')">${o.paid?'✅ Оплачен':'❌ Оплатить'}</button>
+        ${!o.paid?`<button class="act-btn btn-later" onclick="openDebtPayModal('${o.id}')">💸 Долг</button>`:''}
+      </div>
+      <div class="status-btns">
+        <button class="status-btn s-btn-new ${o.status==='new'?'active':''}" onclick="setStatus('${o.id}','new')">🆕</button>
+        <button class="status-btn s-btn-making ${o.status==='making'?'active':''}" onclick="setStatus('${o.id}','making')">⏳ Готовится</button>
+        <button class="status-btn s-btn-ready ${o.status==='ready'?'active':''}" onclick="setStatus('${o.id}','ready')">🔔 Готово!</button>
+        <button class="status-btn s-btn-done ${o.status==='done'?'active':''}" onclick="setStatus('${o.id}','done')">✅ Выдан</button>
+        ${o.status==='new'?`<button class="status-btn s-btn-cancel" onclick="cancelOrder('${o.id}')">🗑 Отмена</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function deadlineLabel(d){
+  return{today:'Сегодня',tomorrow:'Завтра',week:'В теч. недели',next_visit:'След. визит'}[d]||d;
+}
+
+function setStatus(id,status){
+  const o=orders.find(x=>x.id===id); if(!o)return;
+  o.status=status;
+  if(status==='ready') notify('🔔 '+(o.guest||'Заказ')+' — ГОТОВО!');
+  if(status==='done'&&!o.paid) notify('⚠️ Выдан без оплаты: '+(o.guest||'Заказ'));
+  saveOrder(o);
+  renderQueue();
+}
+
+// ─── DISCOUNT MODAL (reuse accept modal for existing orders) ─────
+function openDiscountModal(orderId){
+  const o=orders.find(x=>x.id===orderId); if(!o)return;
+  // Use accept modal to change discount on existing order
+  currentDebtOrderId=orderId;
+  currentDisc=o.discount||0;
+  currentPayMethod=o.payMethod||'card';
+  document.getElementById('accept-msub').textContent='Заказ '+o.id+' · '+(o.guest||'Гость');
+  document.getElementById('dr-original').textContent=o.original.toLocaleString('ru-RU')+' ₩';
+  // Reset presets
+  document.querySelectorAll('.disc-preset').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.disc-preset').forEach(b=>{if(parseInt(b.textContent)===currentDisc||( currentDisc===0&&b.textContent==='Нет'))b.classList.add('active');});
+  document.getElementById('disc-custom').value=currentDisc||'';
+  updateDiscResult(o.original);
+  // Mark pay methods
+  document.querySelectorAll('.pay-method').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.pay-method').forEach(b=>{if(b.querySelector('.pm-name')&&b.querySelector('.pm-name').textContent.toLowerCase().includes(currentPayMethod))b.classList.add('active');});
+  document.getElementById('later-block').style.display='none';
+  document.getElementById('confirm-accept-btn').textContent='💾 Сохранить скидку';
+  // Override confirm to update existing order
+  document.getElementById('confirm-accept-btn').onclick=()=>applyDiscountToOrder(orderId);
+  openModal('modal-accept');
+}
+
+function applyDiscountToOrder(orderId){
+  const o=orders.find(x=>x.id===orderId); if(!o)return;
+  o.discount=currentDisc;
+  o.total=Math.round(o.original*(1-currentDisc/100));
+  closeModal('modal-accept');
+  renderQueue();
+  notify('🏷 Скидка '+currentDisc+'% применена: '+(o.guest||'Заказ'));
+}
+
+// ─── CHANGE PAY MODAL ─────────────────────────────
+function openChangePayModal(orderId){
+  const o=orders.find(x=>x.id===orderId); if(!o)return;
+  currentChangePayOrderId=orderId;
+  currentChangePayMethod=o.payMethod||'card';
+  document.getElementById('changepay-msub').textContent=o.id+' · '+(o.guest||'Гость');
+  document.getElementById('changepay-info').innerHTML=`
+    <div class="dr"><span>Сумма:</span><span>${o.total.toLocaleString('ru-RU')} ₩</span></div>
+    <div class="dr"><span>Статус:</span><span style="color:${o.paid?'var(--palm)':'#C62828'};font-weight:900">${o.paid?'✅ Оплачен':'❌ Не оплачен'}</span></div>`;
+  document.querySelectorAll('#modal-change-pay .pay-method').forEach(b=>b.classList.remove('active'));
+  openModal('modal-change-pay');
+}
+function selectChangePay(method,btn){
+  currentChangePayMethod=method;
+  document.querySelectorAll('#modal-change-pay .pay-method').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function confirmChangePay(){
+  const o=orders.find(x=>x.id===currentChangePayOrderId); if(!o)return;
+  o.payMethod=currentChangePayMethod;
+  o.paid=currentChangePayMethod!=='later';
+  if(!o.paid){
+    o.debtorName=o.guest||'Гость';
+    o.debtorDeadline='next_visit';
+  }
+  saveOrder(o);
+  closeModal('modal-change-pay');
+  renderQueue();
+  notify(o.paid?'✅ Оплачено: '+PAY_LABELS[currentChangePayMethod]:'⏰ Отмечено как долг');
+}
+
+// ─── DEBT PAY MODAL ───────────────────────────────
+function openDebtPayModal(orderId){
+  const o=orders.find(x=>x.id===orderId); if(!o)return;
+  currentDebtOrderId=orderId;
+  currentDebtPayMethod='card';
+  document.getElementById('debt-msub').textContent=o.id+' · '+(o.debtorName||o.guest||'Гость');
+  document.getElementById('debt-pay-info').innerHTML=`<p>💸 К оплате: <strong>${o.total.toLocaleString('ru-RU')} ₩</strong><br>
+    ${o.debtorDeadline?'Срок: '+deadlineLabel(o.debtorDeadline):''}
+    ${o.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')}</p>`;
+  document.querySelectorAll('#modal-pay-debt .pay-method').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#modal-pay-debt .pay-method').classList.add('active');
+  openModal('modal-pay-debt');
+}
+function selectDebtPay(method,btn){
+  currentDebtPayMethod=method;
+  document.querySelectorAll('#modal-pay-debt .pay-method').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function confirmDebtPay(){
+  const o=orders.find(x=>x.id===currentDebtOrderId); if(!o)return;
+  o.paid=true;
+  o.payMethod=currentDebtPayMethod;
+  saveOrder(o);
+  closeModal('modal-pay-debt');
+  renderQueue();
+  notify('✅ Долг оплачен: '+(o.debtorName||o.guest||'Гость')+' — '+o.total.toLocaleString('ru-RU')+' ₩');
+}
+
+// ─── ACCEPT MODAL ─────────────────────────────────
+function openAcceptModal(){
+  const items=Object.values(basket);
+  if(!items.length)return;
+  const original=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const guest=document.getElementById('guest-name').value.trim()||'Гость';
+  currentDisc=basketDisc;
+  currentPayMethod='card';
+  currentDebtOrderId=null;
+  document.getElementById('accept-msub').textContent='Гость: '+guest;
+  document.getElementById('dr-original').textContent=original.toLocaleString('ru-RU')+' ₩';
+  document.querySelectorAll('.disc-preset').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.disc-preset').forEach(b=>{if(parseInt(b.textContent)===currentDisc||(currentDisc===0&&b.textContent==='Нет'))b.classList.add('active');});
+  document.getElementById('disc-custom').value=currentDisc||'';
+  document.getElementById('later-block').style.display='none';
+  document.querySelector('#modal-accept .pay-method').classList.add('active');
+  document.querySelectorAll('#modal-accept .pay-method').forEach((b,i)=>{b.classList.toggle('active',i===0);});
+  document.getElementById('confirm-accept-btn').textContent='✅ Подтвердить оплату';
+  document.getElementById('confirm-accept-btn').onclick=confirmAccept;
+  updateDiscResult(original);
+  openModal('modal-accept');
+}
+
+function setDisc(pct,btn){
+  currentDisc=pct;
+  document.querySelectorAll('.disc-preset').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('disc-custom').value=pct||'';
+  const original=parseInt(document.getElementById('dr-original').textContent.replace(/\D/g,''));
+  updateDiscResult(original);
+}
+
+function setDiscCustom(val){
+  currentDisc=Math.min(100,Math.max(0,parseInt(val)||0));
+  document.querySelectorAll('.disc-preset').forEach(b=>b.classList.remove('active'));
+  const original=parseInt(document.getElementById('dr-original').textContent.replace(/\D/g,''));
+  updateDiscResult(original);
+}
+
+function updateDiscResult(original){
+  const discAmt=Math.round(original*currentDisc/100);
+  const final=original-discAmt;
+  document.getElementById('dr-disc-row').style.display=currentDisc>0?'flex':'none';
+  document.getElementById('dr-disc-pct').textContent=currentDisc;
+  document.getElementById('dr-disc-amt').textContent='−'+discAmt.toLocaleString('ru-RU')+' ₩';
+  document.getElementById('dr-final').textContent=final.toLocaleString('ru-RU')+' ₩';
+}
+
+function selectPay(method,btn){
+  currentPayMethod=method;
+  document.querySelectorAll('#modal-accept .pay-method').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('later-block').style.display=method==='later'?'block':'none';
+  document.getElementById('confirm-accept-btn').textContent=method==='later'?'⏰ Записать долг':'✅ Подтвердить оплату';
+}
+
+function confirmAccept(){
+  // If editing existing order discount
+  if(currentDebtOrderId){
+    applyDiscountToOrder(currentDebtOrderId);
+    return;
+  }
+  const items=Object.values(basket);
+  if(!items.length)return;
+  const original=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const total=Math.round(original*(1-currentDisc/100));
+  const guest=document.getElementById('guest-name').value.trim()||'Гость';
+  const isPaid=currentPayMethod!=='later';
+  const order={
+    id:makeCode(),
+    guest,
+    items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),
+    original,discount:currentDisc,total,
+    time:Date.now(),
+    status:'new',
+    source:'place',
+    paid:isPaid,
+    payMethod:currentPayMethod,
+    debtorName:!isPaid?(document.getElementById('debtor-name').value.trim()||guest):null,
+    debtorDeadline:!isPaid?document.getElementById('debtor-deadline').value:null,
+  };
+  orders.unshift(order);
+  saveOrder(order);
+  basket={};
+  document.getElementById('guest-name').value='';
+  renderBasket();
+  renderMenuPanel();
+  closeModal('modal-accept');
+  renderQueue();
+  if(isPaid) notify('✅ Заказ принят · '+total.toLocaleString('ru-RU')+' ₩ · '+PAY_LABELS[currentPayMethod]);
+  else notify('⏰ Долг записан: '+guest+' — '+total.toLocaleString('ru-RU')+' ₩');
+  document.querySelectorAll('.tab')[currentTab==='debts'?5:1].click();
+}
+
+// ─── MODAL HELPERS ────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+
+// ─── MENU PANEL ───────────────────────────────────
+function renderMenuPanel(){
+  const cats=[...new Set(MENU.map(m=>m.cat))];
+  let html='';
+  cats.forEach(cat=>{
+    html+=`<div class="menu-cat-label">${CAT_LABELS[cat]||cat}</div>`;
+    MENU.filter(m=>m.cat===cat).forEach(m=>{
+      const qty=basket[m.id]?.qty||0;
+      html+=`<button class="menu-btn" onclick="addItem('${m.id}')">
+        <span class="mn">${m.name}</span>
+        <span class="mp">${m.price.toLocaleString('ru-RU')} ₩</span>
+        ${qty>0?`<span class="mq">${qty}</span>`:'<span style="width:22px"></span>'}
+      </button>`;
+    });
+  });
+  document.getElementById('menu-scroll').innerHTML=html;
+}
+
+function addItem(id){
+  const item=MENU.find(m=>m.id===id); if(!item)return;
+  if(!basket[id])basket[id]={...item,qty:0};
+  basket[id].qty++;
+  renderBasket();renderMenuPanel();
+}
+function removeItem(id){
+  if(!basket[id])return;
+  basket[id].qty--;
+  if(basket[id].qty<=0)delete basket[id];
+  renderBasket();renderMenuPanel();
+}
+function renderBasket(){
+  const items=Object.values(basket);
+  const subtotal=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const discAmt=Math.round(subtotal*basketDisc/100);
+  const total=subtotal-discAmt;
+  const discLine=document.getElementById('basket-disc-line');
+  if(discLine){
+    discLine.style.display=basketDisc>0&&items.length?'flex':'none';
+    const pctEl=document.getElementById('basket-disc-pct');
+    const amtEl=document.getElementById('basket-disc-amt');
+    if(pctEl) pctEl.textContent=basketDisc;
+    if(amtEl) amtEl.textContent='−'+discAmt.toLocaleString('ru-RU')+' ₩';
+  }
+  document.getElementById('basket-total').textContent=fmtMoney(total);
+  document.getElementById('accept-btn').disabled=items.length===0;
+  const el=document.getElementById('basket-items');
+  if(!items.length){el.innerHTML='<div class="basket-empty">Добавь позиции из меню</div>';return;}
+  el.innerHTML=items.map(i=>`
+    <div class="basket-item">
+      <span class="bi-name">${i.name}</span>
+      <span class="bi-qty">×${i.qty}</span>
+      <span class="bi-price">${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span>
+      <button class="bi-del" onclick="removeItem('${i.id}')">×</button>
+    </div>`).join('');
+}
+
+// ─── CANCEL ORDER ─────────────────────────────────
+function cancelOrder(id){
+  const o=orders.find(x=>x.id===id);
+  if(!o) return;
+  if(o.status!=='new'){notify('⛔ Нельзя — заказ уже принят в работу');return;}
+  if(!confirm('Отменить заказ '+o.id+' ('+( o.guest||'Гость')+')?')) return;
+  orders=orders.filter(x=>x.id!==id);
+  deleteOrder(id);
+  renderQueue();
+  notify('🗑 Заказ '+o.id+' отменён');
+}
+
+// ─── QUICK DISCOUNT IN BASKET ──────────────────────
+let basketDisc=0;
+function setQuickDisc(pct,btn){
+  basketDisc=pct;
+  document.querySelectorAll('.disc-quick').forEach(b=>{
+    b.style.background=b===btn?'var(--sand3)':'var(--sand)';
+    b.style.borderColor=b===btn?'var(--border2)':'var(--border)';
+  });
+  document.getElementById('basket-disc-input').value=pct||'';
+  renderBasket();
+}
+function setQuickDiscCustom(val){
+  basketDisc=Math.min(100,Math.max(0,parseInt(val)||0));
+  document.querySelectorAll('.disc-quick').forEach(b=>{
+    b.style.background='var(--sand)';b.style.borderColor='var(--border)';
+  });
+  renderBasket();
+}
+
+// ─── NOTIFY ───────────────────────────────────────
+let notifTimer;
+function notify(msg){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// realtime via Supabase
+
+// ─── INIT ─────────────────────────────────────────
+renderMenuPanel();
+renderBasket();
+renderQueue();
+subscribeRealtime();
+loadOrders();
+</script>
+</body>
+</html>
