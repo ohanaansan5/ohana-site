@@ -431,6 +431,7 @@ async function loadMenuFromDB(){
   if(data&&data.length){
     MENU.length=0;
     data.forEach(m=>MENU.push({id:m.id,name:m.name,desc:m.description||'',price:m.price,cat:m.category}));
+    menuItems=MENU;
     renderMenuPanel();renderBasket();
   }
 }
@@ -626,7 +627,7 @@ function renderQueue(){
       </div>`}
       <div class="action-row">
         <button class="act-btn btn-discount" onclick="openDiscountModal('${o.id}')">🏷 Скидка</button>
-        <button class="act-btn" style="background:#FFF8E1;color:#856404;border-color:#FFD54F" onclick="openNoteModal('${o.id}','${(o.note||'').replace(/'/g,\"\\'\")}')">📝 Заметка</button>
+        <button class="act-btn" style="background:#FFF8E1;color:#856404;border-color:#FFD54F" onclick="openNoteModal('${o.id}','${(o.note||'').replace(/'/g,'')}')">📝 Заметка</button>
         <button class="act-btn" style="background:#E3F2FD;color:#1565C0;border-color:#90CAF9" onclick="openAddItemsModal('${o.id}')">➕ Добавить</button>
         <button class="act-btn ${o.paid?'btn-pay':'btn-pay unpaid'}" onclick="openChangePayModal('${o.id}')">${o.paid?'✅ Оплачен':'❌ Оплатить'}</button>
         ${!o.paid?`<button class="act-btn btn-later" onclick="openDebtPayModal('${o.id}')">💸 Долг</button>`:''}
@@ -953,6 +954,7 @@ renderBasket();
 renderQueue();
 subscribeRealtime();
 loadOrders();
+loadMenuFromDB();
 
 // ─── ADD ITEMS TO ORDER ──────────────────────────
 let aimOrderId = null;
@@ -965,14 +967,14 @@ function openAddItemsModal(orderId){
   if(!order) return;
   const current = document.getElementById('aim-current');
   current.innerHTML = `<b>${order.guest||'Заказ'}</b> · ${order.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')} · ${order.total.toLocaleString('ru-RU')} ₩`;
-  renderAimMenu(menuItems);
+  renderAimMenu(MENU);
   renderAimBasket();
   document.getElementById('aim-search').value = '';
   openModal('add-items-modal');
 }
 
 function filterAimMenu(q){
-  renderAimMenu(q ? menuItems.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : menuItems);
+  renderAimMenu(q ? MENU.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : MENU);
 }
 
 function renderAimMenu(items){
@@ -1039,14 +1041,14 @@ let soBasket = {};
 
 function openStaffOrderModal(){
   soBasket = {};
-  renderSoMenu(menuItems);
+  renderSoMenu(MENU);
   renderSoBasket();
   document.getElementById('so-search').value = '';
   openModal('staff-order-modal');
 }
 
 function filterSoMenu(q){
-  renderSoMenu(q ? menuItems.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : menuItems);
+  renderSoMenu(q ? MENU.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : MENU);
 }
 
 function renderSoMenu(items){
