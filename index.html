@@ -871,13 +871,13 @@ nav{
         <label>Событие</label>
         <select class="form-control" id="f-event" onchange="onEventSelect(this)"><option>Акустический вечер</option><option>Бункер (14:00)</option><option>Бункер (19:00)</option><option>Квиз</option><option>Дискотека</option><option>Исторический бал</option><option>Детский МК</option></select></div>
       <div class="form-group"><label>Комментарий</label><textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии..."></textarea></div>
-      <!-- PRE-ORDER DRINKS BUTTON - only for coffee/hall -->
+      </div><!-- end booking-date-time-group -->
+      <!-- PRE-ORDER DRINKS BUTTON -->
       <div id="preorder-drinks-btn" style="display:none;margin-bottom:16px">
         <button type="button" onclick="openPreOrderDrinks()" style="width:100%;padding:12px;background:var(--sand2);border:2px dashed var(--sunset);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--sunset)">
           ☕ Заказать напитки заранее
         </button>
       </div>
-      </div><!-- end booking-date-time-group -->
       <div class="payment-info"><strong>💳 Оплата:</strong> после подтверждения оплаты мы отправим QR-код билета сообщением в Telegram.</div>
 
       <button class="submit-btn" onclick="submitBooking()">Отправить заявку 🌺</button>
