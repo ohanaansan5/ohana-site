@@ -3898,5 +3898,61 @@ function saveEditedEvent(){
 }
 </script>
 <div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
+
+<!-- EVENT EDIT MODAL -->
+<div class="modal-overlay" id="edit-event-modal" onclick="if(event.target===this)closeModal('edit-event-modal')" style="z-index:600">
+  <div class="modal" style="max-width:480px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:900;margin:0">✏️ Редактировать мероприятие</h3>
+      <button onclick="closeModal('edit-event-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+    <input type="hidden" id="edit-ev-idx">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Название *</label>
+        <input id="edit-ev-title" type="text" class="form-input" placeholder="Акустический вечер" style="width:100%;box-sizing:border-box">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Дата *</label>
+          <input id="edit-ev-date" type="date" class="form-input" style="width:100%;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Время</label>
+          <input id="edit-ev-time" type="text" class="form-input" placeholder="19:00–22:00" style="width:100%;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Мест</label>
+          <input id="edit-ev-seats" type="number" class="form-input" placeholder="30" style="width:100%;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Цена ₩</label>
+          <input id="edit-ev-price" type="number" class="form-input" placeholder="0 = бесплатно" style="width:100%;box-sizing:border-box">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Описание</label>
+        <textarea id="edit-ev-desc" class="form-input" rows="2" placeholder="Краткое описание..." style="width:100%;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Цвет метки</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="edit-ev-colors">
+          <div class="color-dot" onclick="selectEditEvColor(this,'#E8651A')" data-color="#E8651A" style="width:28px;height:28px;border-radius:50%;background:#E8651A;cursor:pointer;border:3px solid transparent"></div>
+          <div class="color-dot" onclick="selectEditEvColor(this,'#3D7A4A')" data-color="#3D7A4A" style="width:28px;height:28px;border-radius:50%;background:#3D7A4A;cursor:pointer;border:3px solid transparent"></div>
+          <div class="color-dot" onclick="selectEditEvColor(this,'#2563EB')" data-color="#2563EB" style="width:28px;height:28px;border-radius:50%;background:#2563EB;cursor:pointer;border:3px solid transparent"></div>
+          <div class="color-dot" onclick="selectEditEvColor(this,'#9333EA')" data-color="#9333EA" style="width:28px;height:28px;border-radius:50%;background:#9333EA;cursor:pointer;border:3px solid transparent"></div>
+          <div class="color-dot" onclick="selectEditEvColor(this,'#DC2626')" data-color="#DC2626" style="width:28px;height:28px;border-radius:50%;background:#DC2626;cursor:pointer;border:3px solid transparent"></div>
+          <div class="color-dot" onclick="selectEditEvColor(this,'#B45309')" data-color="#B45309" style="width:28px;height:28px;border-radius:50%;background:#B45309;cursor:pointer;border:3px solid transparent"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="closeModal('edit-event-modal')" style="flex:1;padding:12px;background:var(--sand2);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">Отмена</button>
+      <button onclick="saveEditedEvent()" style="flex:2;padding:12px;background:var(--sunset);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer">✅ Сохранить</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
