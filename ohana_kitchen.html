@@ -1315,6 +1315,25 @@ async function markStaffPaid(orderId){
   await saveOrder(order);
   renderQueue();
   notify('✅ Долг погашен: ' + order.guest);
+  // Send QR receipt via bot
+  const contact = (order.debtorName || order.guest || '').replace(' (персонал)','').trim();
+  if(contact && contact.startsWith('@')){
+    try{
+      await fetch('https://adaptable-enjoyment-production.up.railway.app/cart-confirm', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          order_id: order.id,
+          contact: contact,
+          guest_name: order.guest || contact,
+          items: order.items || [],
+          total: order.total || 0,
+          pay_method: 'cash'
+        })
+      });
+      notify('📱 QR-чек отправлен в Telegram ' + contact);
+    }catch(e){console.warn('Bot QR error:',e);}
+  }
 }
 
 function toggleStaffCustomName(sel){
