@@ -870,72 +870,87 @@ nav{
 
       <button class="submit-btn" onclick="submitBooking()">Отправить заявку 🌺</button>
     </div>
-    <div id="booking-success" style="display:none">
-      <div style="background:var(--sand2);border:2px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:20px">
-        <div style="font-size:36px;margin-bottom:10px">🌺</div>
-        <h3 style="font-size:20px;font-weight:900;margin-bottom:8px">Заявка принята!</h3>
-        <p style="font-size:14px;color:var(--muted);font-weight:600" id="booking-success-name"></p>
-      </div>
+        <div id="booking-success" style="display:none">
 
-      <div style="margin-bottom:16px">
-        <div class="payment-choice-wrap"><div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;text-align:center">Выберите способ оплаты:</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <button onclick="choosePayment('card')" style="border:2px solid var(--border);background:var(--card);border-radius:14px;padding:20px 16px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.borderColor='var(--sunset)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:32px;margin-bottom:8px">💳</div>
-            <div style="font-size:15px;font-weight:900;color:var(--text)">Картой</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">Visa / Mastercard / 카드</div>
-          </button>
-          <button onclick="choosePayment('transfer')" style="border:2px solid var(--border);background:var(--card);border-radius:14px;padding:20px 16px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.borderColor='var(--palm)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:32px;margin-bottom:8px">📲</div>
-            <div style="font-size:15px;font-weight:900;color:var(--text)">Переводом</div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">NH Bank / Kakao / Toss</div>
-          </button>
+      <!-- STEP 1: Payment choice (shown first) -->
+      <div id="bs-payment-choice">
+        <div style="background:var(--sand2);border:2px solid var(--border);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:20px">
+          <div style="font-size:32px;margin-bottom:8px">🌺</div>
+          <h3 style="font-size:18px;font-weight:900;margin-bottom:6px">Выберите способ оплаты</h3>
+          <p style="font-size:13px;color:var(--muted);font-weight:700" id="booking-success-name"></p>
         </div>
-      </div>
+        <div class="payment-choice-wrap">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;text-align:center">Как будете оплачивать?</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <button onclick="choosePayment('card')" style="border:2px solid var(--border);background:var(--card);border-radius:14px;padding:20px 12px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.borderColor='var(--sunset)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:32px;margin-bottom:8px">💳</div>
+              <div style="font-size:14px;font-weight:900;color:var(--text)">Картой</div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">Visa / Mastercard / 카드</div>
+            </button>
+            <button onclick="choosePayment('transfer')" style="border:2px solid var(--border);background:var(--card);border-radius:14px;padding:20px 12px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif" onmouseover="this.style.borderColor='var(--palm)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-size:32px;margin-bottom:8px">📲</div>
+              <div style="font-size:14px;font-weight:900;color:var(--text)">Переводом</div>
+              <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:4px">NH Bank / Kakao / Toss</div>
+            </button>
+          </div>
+        </div>
 
-      </div><!-- end payment-choice-wrap -->
-      <!-- CARD PAYMENT INFO -->
-      <div id="payment-card-block" style="display:none;background:var(--sand2);border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:center">
-        <div style="font-size:14px;font-weight:700;line-height:1.7">
-          💳 Мы свяжемся с вами в Telegram и пришлём ссылку для оплаты картой.<br>
-          <strong style="color:var(--sunset)">QR-билет придёт после подтверждения платежа.</strong>
-        </div>
-      </div>
+        <!-- Card payment block -->
+        <div id="payment-card-block" style="display:none"></div>
 
-      <!-- TRANSFER PAYMENT INFO -->
-      <div id="payment-transfer-block" style="display:none;border-radius:12px;overflow:hidden">
-        <div style="background:var(--palm);padding:14px 18px">
-          <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:.06em;margin-bottom:4px">РЕКВИЗИТЫ ДЛЯ ПЕРЕВОДА</div>
-          <div style="font-size:16px;font-weight:900;color:#fff">NH Bank (농협)</div>
-        </div>
-        <div style="background:var(--sand2);border:1.5px solid var(--border);border-top:none;padding:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)">
-            <span style="font-size:12px;color:var(--muted);font-weight:700">Номер счёта</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:17px;font-weight:900;color:var(--text);font-family:monospace">351-1321-172853</span>
-              <button onclick="copyAccount()" style="padding:4px 10px;background:var(--sunset);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Копировать</button>
+        <!-- Transfer payment block -->
+        <div id="payment-transfer-block" style="display:none;border-radius:12px;overflow:hidden">
+          <div style="background:var(--palm);padding:14px 18px">
+            <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.8);letter-spacing:.06em;margin-bottom:4px">РЕКВИЗИТЫ ДЛЯ ПЕРЕВОДА</div>
+            <div style="font-size:16px;font-weight:900;color:#fff">NH Bank (농협)</div>
+          </div>
+          <div style="background:var(--sand2);border:1.5px solid var(--border);border-top:none;padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)">
+              <span style="font-size:12px;color:var(--muted);font-weight:700">Номер счёта</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:17px;font-weight:900;color:var(--text);font-family:monospace">351-1321-172853</span>
+                <button onclick="copyAccount()" style="padding:4px 10px;background:var(--sunset);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Копировать</button>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border)">
+              <span style="font-size:12px;color:var(--muted);font-weight:700">Получатель</span>
+              <span style="font-size:14px;font-weight:900;color:var(--text)">KIM ALEKSANDR</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:12px">
+              <span style="font-size:12px;color:var(--muted);font-weight:700">Банк</span>
+              <span style="font-size:14px;font-weight:900;color:var(--text)">NH Bank (농협)</span>
+            </div>
+            <div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;line-height:1.65;margin-bottom:12px">
+              ⚠️ После перевода пришлите скриншот боту — QR-билет придёт автоматически.
+            </div>
+            <a id="bot-link-transfer" href="https://t.me/ohana_ansan_bot" target="_blank"
+              onclick="showTransferPending()"
+              style="display:flex;align-items:center;justify-content:center;gap:10px;background:#229ED9;color:#fff;border-radius:12px;padding:14px;text-decoration:none;font-size:15px;font-weight:900;font-family:'Nunito',sans-serif">
+              <span style="font-size:20px">✈️</span> Написать боту @ohana_ansan_bot
+            </a>
+            <div id="transfer-pending-msg" style="display:none;margin-top:12px;background:var(--sand2);border-radius:12px;padding:14px;text-align:center">
+              <div style="font-size:24px;margin-bottom:6px">⏳</div>
+              <div style="font-size:14px;font-weight:900;color:var(--text)">Запись оформлена!</div>
+              <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:4px;line-height:1.6">
+                Переведите оплату и пришлите скриншот боту.<br>
+                QR-билет придёт после подтверждения.
+              </div>
             </div>
           </div>
-          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border)">
-            <span style="font-size:12px;color:var(--muted);font-weight:700">Получатель</span>
-            <span style="font-size:14px;font-weight:900;color:var(--text)">KIM ALEKSANDR</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:12px">
-            <span style="font-size:12px;color:var(--muted);font-weight:700">Банк</span>
-            <span style="font-size:14px;font-weight:900;color:var(--text)">NH Bank (농협)</span>
-          </div>
-          <div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;line-height:1.65">
-            ⚠️ После перевода пришлите скриншот боту — QR-билет придёт автоматически.
-          </div>
-          <a id="bot-link-transfer" href="https://t.me/ohana_ansan_bot" target="_blank"
-            style="display:flex;align-items:center;justify-content:center;gap:10px;background:#229ED9;color:#fff;border-radius:12px;padding:14px;text-decoration:none;font-size:15px;font-weight:900;font-family:'Nunito',sans-serif;margin-top:12px">
-            <span style="font-size:20px">✈️</span> Написать боту @ohana_ansan_bot
-          </a>
         </div>
       </div>
+
+      <!-- STEP 2: Success after card payment -->
+      <div id="bs-success" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">🎉</div>
+        <h3 style="font-size:20px;font-weight:900;margin-bottom:8px;color:var(--palm)">Запись оформлена! 🌺</h3>
+        <p style="font-size:14px;color:var(--muted);font-weight:700" id="bs-success-detail"></p>
+        <div style="background:var(--sand2);border-radius:12px;padding:14px;margin-top:16px;font-size:13px;font-weight:700;color:var(--muted)">
+          QR-билет уже отправлен в Telegram 🎟
+        </div>
+      </div>
+
     </div>
-  </div>
-</div>
 
 <!-- AUTH -->
 <div class="section" id="s-auth">
@@ -2700,15 +2715,22 @@ async function submitBooking(){
   if(transferBlock) transferBlock.style.display='none';
   document.getElementById('booking-form-wrap').style.display='none';
   successEl.style.display='block';
-  // Scroll to top of success
-  successEl.scrollIntoView({behavior:'smooth',block:'start'});
-  // Store booking id for payment choice
+  // Show payment choice (not success yet)
+  document.getElementById('bs-payment-choice').style.display='block';
+  document.getElementById('bs-success').style.display='none';
+  document.getElementById('payment-card-block').style.display='none';
+  document.getElementById('payment-transfer-block').style.display='none';
+  // Store booking data
   successEl.dataset.bookingId = bk.id;
   successEl.dataset.contact = bk.contact||'';
   successEl.dataset.guestName = name;
   successEl.dataset.bookingType = type||'';
   successEl.dataset.eventDate = date||'';
   successEl.dataset.eventTime = selectedTime||'';
+  // Update name label
+  const nameEl2 = document.getElementById('booking-success-name');
+  if(nameEl2) nameEl2.textContent = name + (type ? ' · ' + type : '');
+  successEl.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ═══ UTILS ═══════════════════════════════════════════
@@ -3358,19 +3380,19 @@ function copyAccount(){
 }
 
 // ─── PAYMENT CHOICE ───────────────────────────────
+function showTransferPending(){
+  const el = document.getElementById('transfer-pending-msg');
+  if(el) el.style.display = 'block';
+}
+
 function resetPaymentChoice(){
   const cardBlock = document.getElementById('payment-card-block');
   const transferBlock = document.getElementById('payment-transfer-block');
   if(cardBlock) cardBlock.style.display = 'none';
   if(transferBlock) transferBlock.style.display = 'none';
-  // Re-enable buttons
   const successEl = document.getElementById('booking-success');
   successEl?.querySelectorAll('button[onclick^="choosePayment"]').forEach(b=>{
     b.style.opacity='1'; b.style.pointerEvents='auto';
-  });
-  // Remove change link
-  successEl?.querySelectorAll('.payment-choice-wrap > div:last-child').forEach(el=>{
-    if(el.querySelector('[onclick*="resetPaymentChoice"]')) el.remove();
   });
 }
 
@@ -3640,25 +3662,60 @@ const IMP_CODE = 'imp78526555';
 const CHANNEL_KEY = 'channel-key-805c13e4-61c4-4ced-9683-b58919411241';
 
 
-function startCardPayment(bookingId, guestName, contact, amount, itemName){
+async function startCardPayment(bookingId, guestName, contact, amount, itemName){
+  // Amount must be set in event settings
+  let finalAmount = amount;
+  if(!finalAmount || finalAmount === 0){
+    document.getElementById('payment-card-block').innerHTML = `
+      <div style="text-align:center;padding:16px">
+        <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+        <div style="font-size:14px;font-weight:800;color:var(--muted)">Цена не указана</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">
+          Персонал должен указать стоимость билета<br>в настройках мероприятия
+        </div>
+      </div>`;
+    return;
+  }
+  
   payWithPortOne({
-    amount,
+    amount: finalAmount,
     orderId: bookingId,
-    name: itemName || 'OHANA — ' + itemName,
+    name: (itemName||'OHANA').substring(0, 40),
     buyerName: guestName,
-    buyerContact: contact,
+    buyerContact: '010-0000-0000',
     onSuccess: async (rsp) => {
-      // Update booking status
+      // Show success screen
+      document.getElementById('bs-payment-choice').style.display='none';
+      document.getElementById('bs-success').style.display='block';
+      const detail = document.getElementById('bs-success-detail');
+      if(detail) detail.textContent = guestName + ' · ' + itemName;
       notify('✅ Оплата прошла! QR-билет придёт в Telegram.');
-      document.getElementById('payment-card-block').innerHTML = `
-        <div style="text-align:center;padding:16px">
-          <div style="font-size:36px;margin-bottom:8px">✅</div>
-          <div style="font-size:15px;font-weight:900;color:var(--palm)">Оплата прошла!</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:6px">QR-билет придёт в Telegram @${contact}</div>
-        </div>`;
+      // Send QR via bot + notify staff
+      const botUrl2 = localStorage.getItem('ohana_bot_url')||'https://adaptable-enjoyment-production.up.railway.app';
+      const ticketCode = 'OHN-' + Date.now().toString(36).toUpperCase().slice(-6);
+      try{
+        await fetch(botUrl2+'/confirm-payment',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            booking_id: bookingId,
+            ticket_code: ticketCode,
+            contact: contact,
+            guest_name: guestName,
+            payment_method: 'card',
+            imp_uid: rsp.imp_uid
+          })
+        });
+      }catch(e){ console.warn('Bot QR error:', e); }
     },
     onFail: (msg) => {
-      notify('❌ Ошибка оплаты: ' + msg);
+      document.getElementById('payment-card-block').innerHTML = `
+        <div style="text-align:center;padding:16px">
+          <div style="font-size:32px;margin-bottom:8px">❌</div>
+          <div style="font-size:14px;font-weight:800;color:var(--hibiscus)">Ошибка оплаты</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">${msg}</div>
+          <button onclick="resetPaymentChoice()" style="margin-top:12px;padding:8px 20px;background:var(--sunset);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">Попробовать снова</button>
+        </div>`;
     }
   });
 }
