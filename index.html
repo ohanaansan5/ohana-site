@@ -859,14 +859,17 @@ nav{
         <input class="form-control" type="text" id="f-contact" placeholder="@username (обязательно для получения QR-билета)">
         <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:700">QR-код придёт сюда после подтверждения оплаты</div>
       </div>
-      <div id="booking-date-time-group" style="display:block">
-      <div class="form-row">
-        <div class="form-group"><label>Дата</label><input class="form-control" type="date" id="f-date"></div>
-        <div class="form-group"><label>Гостей</label><select class="form-control" id="f-guests"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7–10</option><option>10+</option></select></div>
+     
+      <!-- GUESTS - always visible for all types -->
+      <div class="form-group" id="guests-group">
+        <label>Количество гостей</label>
+        <select class="form-control" id="f-guests">
+          <option>1</option><option>2</option><option>3</option><option>4</option>
+          <option>5</option><option>6</option><option>7–10</option><option>10+</option>
+        </select>
       </div>
-      <div class="form-group" id="time-free-group"><label>Время прихода</label>
-        <input class="form-control" type="text" id="f-time-free" placeholder="Например: 15:00 или 15:00–17:00" oninput="selectedTime=this.value">
-      </div>
+
+      <!-- EVENT SELECTOR - for event and games types -->
       <div id="event-select-group" style="display:none">
         <div class="form-group">
           <label>Выберите мероприятие</label>
@@ -874,8 +877,38 @@ nav{
           <div id="event-select-info" style="display:none;font-size:12px;color:var(--muted);font-weight:700;margin-top:6px;padding:8px 12px;background:var(--sand2);border-radius:8px"></div>
         </div>
       </div>
-      <div class="form-group"><label>Комментарий</label><textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии..."></textarea></div>
-      </div><!-- end booking-date-time-group -->
+
+      <!-- DATE + TIME - for hall only -->
+      <div id="hall-date-group" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label>Дата</label><input class="form-control" type="date" id="f-date"></div>
+          <div class="form-group"><label>Время</label><input class="form-control" type="text" id="f-time-free" placeholder="15:00–17:00" oninput="selectedTime=this.value"></div>
+        </div>
+      </div>
+
+      <!-- TIME - for table (coffee) only -->
+      <div id="table-time-group" style="display:none">
+        <div class="form-group">
+          <label>Время прихода</label>
+          <input class="form-control" type="text" id="f-time-table" placeholder="Например: 15:00" oninput="selectedTime=this.value">
+        </div>
+      </div>
+
+      <!-- COMMENT - for hall only -->
+      <div id="comment-group" style="display:none">
+        <div class="form-group">
+          <label>Комментарий</label>
+          <textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии..."></textarea>
+        </div>
+      </div>
+
+      <!-- PRE-ORDER DRINKS - for table, event, games -->
+      <div id="preorder-drinks-btn" style="display:none;margin-bottom:16px">
+        <button type="button" onclick="openPreOrderDrinks()" style="width:100%;padding:12px;background:var(--sand2);border:2px dashed var(--sunset);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--sunset)">
+          ☕ Заказать напитки заранее
+        </button>
+      </div>
+
       <!-- PRE-ORDER DRINKS BUTTON -->
       <div id="preorder-drinks-btn" style="display:none;margin-bottom:16px">
         <button type="button" onclick="openPreOrderDrinks()" style="width:100%;padding:12px;background:var(--sand2);border:2px dashed var(--sunset);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--sunset)">
@@ -2735,19 +2768,22 @@ function openCart(){
 
 function selectType(type,el){
   document.querySelectorAll('.booking-type').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');selectedBookingType=type;
-  // Event and games: show event selector, hide date/time (taken from event)
-  const isEventType = (type==='event'||type==='games');
-  document.getElementById('event-select-group').style.display = isEventType ? 'block' : 'none';
-  // Date/guests/time only for table and hall (free choice)
-  const showDateFields = (type==='table'||type==='hall');
-  const dateGroup = document.getElementById('booking-date-time-group');
-  if(dateGroup) dateGroup.style.display = showDateFields ? 'block' : 'none';
-  // Pre-order drinks button only for coffee
-  const preorder = document.getElementById('preorder-drinks-btn');
-  if(preorder) preorder.style.display = (type==='table'||type==='event'||type==='games') ? 'block' : 'none';
-  // For event/games — populate selector with matching events
-  if(isEventType) populateEventSelector(type); // type='event' or 'games'
+  el.classList.add('selected'); selectedBookingType=type;
+  const show = id => { const e=document.getElementById(id); if(e) e.style.display='block'; };
+  const hide = id => { const e=document.getElementById(id); if(e) e.style.display='none'; };
+  // Hide all conditional groups first
+  ['event-select-group','hall-date-group','table-time-group','comment-group','preorder-drinks-btn'].forEach(hide);
+  if(type==='event'||type==='games'){
+    show('event-select-group');
+    show('preorder-drinks-btn');
+    populateEventSelector(type);
+  } else if(type==='table'){
+    show('table-time-group');
+    show('preorder-drinks-btn');
+  } else if(type==='hall'){
+    show('hall-date-group');
+    show('comment-group');
+  }
 }
 function selectTime(btn){
   document.querySelectorAll('.time-slot').forEach(b=>b.classList.remove('active'));
@@ -2758,14 +2794,15 @@ async function submitBooking(){
   const email=document.getElementById('f-email').value.trim()||currentUser?.email||'';
   const contact=document.getElementById('f-contact').value.trim();
   let date=document.getElementById('f-date')?.value||'';
-  // For event/games, get date from selected event
   if(selectedBookingType==='event'||selectedBookingType==='games'){
     const sel=document.getElementById('f-event');
     const opt=sel?.options[sel.selectedIndex];
     if(opt?.dataset.date) date=opt.dataset.date;
     if(opt?.dataset.time) selectedTime=opt.dataset.time;
-  } else {
-    selectedTime = document.getElementById('f-time-free')?.value||selectedTime||'';
+  } else if(selectedBookingType==='table'){
+    selectedTime = document.getElementById('f-time-table')?.value||'';
+  } else if(selectedBookingType==='hall'){
+    selectedTime = document.getElementById('f-time-free')?.value||'';
   }
   const comment=document.getElementById('f-comment').value.trim();
   if(!name||!date){alert('Заполните имя и дату');return;}
