@@ -807,7 +807,7 @@ function selectChangePay(method,btn){
   document.querySelectorAll('#modal-change-pay .pay-method').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
-function confirmChangePay(){
+async function confirmChangePay(){
   const o=orders.find(x=>x.id===currentChangePayOrderId); if(!o)return;
   o.payMethod=currentChangePayMethod;
   o.paid=currentChangePayMethod!=='later';
@@ -815,10 +815,36 @@ function confirmChangePay(){
     o.debtorName=o.guest||'Гость';
     o.debtorDeadline='next_visit';
   }
-  saveOrder(o);
+  await saveOrder(o);
   closeModal('modal-change-pay');
   renderQueue();
   notify(o.paid?'✅ Оплачено: '+PAY_LABELS[currentChangePayMethod]:'⏰ Отмечено как долг');
+
+  // Send QR receipt via bot if paid and contact known
+  if(o.paid){
+    const contact = o.guest?.startsWith('@') ? o.guest : '';
+    if(contact){
+      try{
+        const resp = await fetch('https://adaptable-enjoyment-production.up.railway.app/cart-confirm',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            order_id: o.id,
+            contact: contact,
+            guest_name: o.guest||'Гость',
+            items: o.items||[],
+            total: o.total||0,
+            pay_method: currentChangePayMethod
+          })
+        });
+        const r = await resp.json();
+        if(r.sent) notify('📱 QR-чек отправлен в Telegram ' + contact);
+        else notify('⚠️ QR не доставлен — гость не писал боту');
+      }catch(e){console.warn('Bot QR error:',e);}
+    } else {
+      notify('✅ Оплачено · QR не отправлен (нет @username гостя)');
+    }
+  }
 }
 
 // ─── DEBT PAY MODAL ───────────────────────────────
