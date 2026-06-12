@@ -3842,21 +3842,23 @@ let editEvColor = '#E8651A';
 
 function editEvent(idx){
   const ev = EVENTS[idx];
-  if(!ev) return;
-  document.getElementById('edit-ev-idx').value = idx;
-  document.getElementById('edit-ev-title').value = ev.title || '';
-  document.getElementById('edit-ev-date').value = ev.date || '';
-  document.getElementById('edit-ev-time').value = ev.time || '';
-  document.getElementById('edit-ev-seats').value = ev.seats || 30;
-  document.getElementById('edit-ev-price').value = ev.price_num || 0;
-  document.getElementById('edit-ev-desc').value = ev.desc || '';
+  if(!ev){ console.error('Event not found:', idx); return; }
+  // Null-safe field setting
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.value=val; else console.error('Missing:', id); };
+  set('edit-ev-idx', idx);
+  set('edit-ev-title', ev.title||'');
+  set('edit-ev-date', ev.date||'');
+  set('edit-ev-time', ev.time||'');
+  set('edit-ev-seats', ev.seats||30);
+  set('edit-ev-price', ev.price_num||0);
+  set('edit-ev-desc', ev.desc||'');
   editEvColor = ev.color || '#E8651A';
-  // Highlight current color
   document.querySelectorAll('#edit-ev-colors .color-dot').forEach(d=>{
     d.style.border = d.dataset.color === editEvColor ? '3px solid var(--text)' : '3px solid transparent';
   });
   openModal('edit-event-modal');
 }
+
 
 function selectEditEvColor(el, color){
   editEvColor = color;
