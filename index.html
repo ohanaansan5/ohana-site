@@ -951,6 +951,7 @@ nav{
       </div>
 
     </div>
+  </div>
 </div>
 
 <!-- AUTH -->
@@ -1457,7 +1458,6 @@ nav{
       </div>
     </div>
   </div>
-</div>
 
 <!-- INFO -->
 <div class="section" id="s-info">
@@ -1587,11 +1587,8 @@ nav{
       <div style="text-align:center;padding:40px;color:var(--muted);font-weight:700;grid-column:1/-1">Скоро здесь появятся фото с наших мероприятий 🌺</div>
     </div>
   </div>
-</div>
-
-
-<!-- FOOTER -->
-<footer class="site-footer">
+  <!-- FOOTER -->
+  <footer class="site-footer">
   <div class="footer-logo">OHANA <span>🌺</span></div>
   <div class="footer-motto">Не место, а люди! · Ohana means family</div>
   <div class="footer-links">
@@ -1602,6 +1599,7 @@ nav{
   </div>
   <div class="footer-copy">© 2026 OHANA Ивент-кафе · Ансан, Южная Корея 🌊</div>
 </footer>
+</div>
 
 
 <script>
@@ -3564,8 +3562,23 @@ async function submitCartOrder(payMethod){
       buyerContact: '010-0000-0000',
       onSuccess: async (rsp) => {
         document.getElementById('cart-step-waiting-card').style.display = 'block';
-        if(summaryCard) summaryCard.innerHTML = `✅ Оплата прошла!<br>QR-чек придёт в Telegram ${tg}`;
+        if(summaryCard) summaryCard.innerHTML = `✅ Оплата прошла! QR-чек придёт в Telegram ${tg}`;
         notify('✅ Оплата прошла! QR-чек придёт в Telegram');
+        // Send QR receipt via bot
+        try{
+          await fetch('https://adaptable-enjoyment-production.up.railway.app/cart-confirm',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              order_id: code,
+              contact: tg,
+              guest_name: tg,
+              items: items.map(i=>({name:i.name,price:Math.round(i.price),qty:i.qty})),
+              total,
+              pay_method: 'card'
+            })
+          });
+        }catch(e){console.warn('QR receipt error:',e);}
       },
       onFail: (msg) => {
         // Payment failed - go back to payment choice

@@ -1,0 +1,43 @@
+{
+  "name": "OHANA — Кафе Ансан",
+  "short_name": "OHANA",
+  "description": "Кафе OHANA в Ансане — мероприятия, меню, бронирование",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDF6E3",
+  "theme_color": "#E8651A",
+  "orientation": "portrait-primary",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23E8651A'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle'%3E🌺%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23E8651A'/%3E%3Ctext x='256' y='340' font-size='300' text-anchor='middle'%3E🌺%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Меню",
+      "url": "/#menu",
+      "description": "Посмотреть меню"
+    },
+    {
+      "name": "Забронировать",
+      "url": "/#booking",
+      "description": "Забронировать место"
+    },
+    {
+      "name": "Мероприятия",
+      "url": "/#events",
+      "description": "Афиша мероприятий"
+    }
+  ]
+}

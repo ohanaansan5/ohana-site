@@ -729,12 +729,30 @@ function deadlineLabel(d){
   return{today:'Сегодня',tomorrow:'Завтра',week:'В теч. недели',next_visit:'След. визит'}[d]||d;
 }
 
-function setStatus(id,status){
+async function setStatus(id,status){
   const o=orders.find(x=>x.id===id); if(!o)return;
   o.status=status;
-  if(status==='ready') notify('🔔 '+(o.guest||'Заказ')+' — ГОТОВО!');
+  if(status==='ready'){
+    notify('🔔 '+(o.guest||'Заказ')+' — ГОТОВО!');
+    // Notify guest via bot if contact known
+    const contact = o.guest?.startsWith('@') ? o.guest : '';
+    if(contact && o.source!=='staff'){
+      try{
+        fetch('https://adaptable-enjoyment-production.up.railway.app/order-ready', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            order_id: o.id,
+            contact: contact,
+            guest: o.guest||'Гость',
+            items: o.items
+          })
+        });
+      }catch(e){console.warn('Bot notify error:',e);}
+    }
+  }
   if(status==='done'&&!o.paid) notify('⚠️ Выдан без оплаты: '+(o.guest||'Заказ'));
-  saveOrder(o);
+  await saveOrder(o);
   renderQueue();
 }
 
