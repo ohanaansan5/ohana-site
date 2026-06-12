@@ -213,6 +213,9 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
       <h2>➕ Принять заказ</h2>
       <p>Выбери позиции → Принять</p>
     </div>
+    <button onclick="openStaffOrderModal()" style="width:100%;padding:10px;background:linear-gradient(135deg,#9C27B0,#7B1FA2);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+      👤 Заказ для персонала <span style="background:rgba(255,255,255,.25);border-radius:99px;padding:2px 8px;font-size:11px">−40%</span>
+    </button>
     <div class="name-row">
       <input type="text" id="guest-name" placeholder="Имя / стол (необязательно)" maxlength="30">
     </div>
@@ -868,7 +871,8 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 
 // ─── MENU PANEL ───────────────────────────────────
 function renderMenuPanel(){
-  const filtered = currentMenuCat==='all' ? MENU : MENU.filter(m=>m.cat===currentMenuCat);
+  const filtered = (currentMenuCat==='all' ? MENU : MENU.filter(m=>m.cat===currentMenuCat))
+    .slice().sort((a,b)=>a.name.localeCompare(b.name,'ru'));
   const cats=[...new Set(filtered.map(m=>m.cat))];
   let html='';
   if(!filtered.length){
@@ -999,6 +1003,7 @@ function filterAimMenu(q){
 }
 
 function renderAimMenu(items){
+  items = items.slice().sort((a,b)=>a.name.localeCompare(b.name,'ru'));
   const el = document.getElementById('aim-menu-list');
   if(!items||!items.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Ничего не найдено</div>';return;}
   const cats={coffee:'☕',notcoffee:'🫖',noncoffee:'🫖',tea:'🍵',lemonade:'🍋',milkshake:'🥤',seasonal:'🌸',food:'🥐'};
@@ -1073,6 +1078,7 @@ function filterSoMenu(q){
 }
 
 function renderSoMenu(items){
+  items = items.slice().sort((a,b)=>a.name.localeCompare(b.name,'ru'));
   const el = document.getElementById('so-menu-list');
   if(!items||!items.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Ничего не найдено</div>';return;}
   el.innerHTML = items.map(m=>{
