@@ -565,12 +565,11 @@ function elapsed(ts){
 // ─── TABS ─────────────────────────────────────────
 function showTab(tab,btn){
   currentTab=tab;
-  // Update staff count badge
-  const staffCount = orders.filter(o=>o.source==='staff').length;
-  const staffCnt = document.getElementById('cnt-staff');
-  if(staffCnt) staffCnt.textContent = staffCount;
+  const staffCount=orders.filter(o=>o.source==='staff'&&o.status!=='done').length;
+  const staffCnt=document.getElementById('cnt-staff');
+  if(staffCnt) staffCnt.textContent=staffCount;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   renderQueue();
 }
 
@@ -617,7 +616,66 @@ function renderQueue(){
     return;
   }
 
-  let filtered=currentTab==='all'?orders:orders.filter(o=>o.status===currentTab);
+  // Staff tab
+  if(currentTab==='staff'){
+    const staffOrders=orders.filter(o=>o.source==='staff');
+    if(!staffOrders.length){
+      el.innerHTML='<div class="queue-empty"><div class="ei">👤</div><p>Нет заказов персонала</p></div>';
+      return;
+    }
+    // Group by debtor
+    const debtors=[...new Set(staffOrders.filter(o=>!o.paid).map(o=>o.guest))];
+    const totalDebt=staffOrders.filter(o=>!o.paid).reduce((s,o)=>s+o.total,0);
+    let html='';
+    if(totalDebt>0){
+      html+=`<div style="background:#F3E5F5;border:1.5px solid #CE93D8;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:800;color:#6A1B9A">💸 Долги персонала:</span>
+        <span style="font-size:16px;font-weight:900;color:#6A1B9A">${totalDebt.toLocaleString('ru-RU')} ₩</span>
+      </div>`;
+    }
+    // Filter by debtor if selected
+    const selectedDebtor=document.getElementById('staff-debtor-filter')?.value||'all';
+    let filtered2=selectedDebtor==='all'?staffOrders:staffOrders.filter(o=>o.guest===selectedDebtor);
+    // Add debtor filter selector
+    const debtorNames=[...new Set(staffOrders.map(o=>o.guest))];
+    html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:800;color:var(--muted)">Фильтр:</span>
+      <select id="staff-debtor-filter" onchange="renderQueue()" style="background:var(--sand);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text)">
+        <option value="all">Все сотрудники</option>
+        ${debtorNames.map(n=>`<option value="${n}" ${selectedDebtor===n?'selected':''}>${n}</option>`).join('')}
+      </select>
+      <label style="font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:4px">
+        <input type="checkbox" id="staff-debt-only" onchange="renderQueue()" ${document.getElementById('staff-debt-only')?.checked?'checked':''}>
+        Только долги
+      </label>
+    </div>`;
+    const debtOnly=document.getElementById('staff-debt-only')?.checked;
+    if(debtOnly) filtered2=filtered2.filter(o=>!o.paid);
+    el.innerHTML=html+filtered2.map(o=>`
+      <div class="order-card ${o.paid?'s-staff':'s-staff-debt'}">
+        <div class="oc-head">
+          <div class="oc-name">${o.guest}</div>
+          <div class="oc-badges">
+            <span class="badge" style="background:#F3E5F5;color:#6A1B9A">👤 Персонал</span>
+            <span class="badge ${o.paid?'b-paid':'b-unpaid'}">${o.paid?'✅ Оплачено':'💸 В долг'}</span>
+            <span class="badge b-discount">−40%</span>
+          </div>
+        </div>
+        ${o.note?`<div style="background:#FFF8E1;border-left:3px solid #FFC107;border-radius:0 6px 6px 0;padding:4px 10px;margin-bottom:6px;font-size:12px;font-weight:800;color:#856404">📝 ${o.note}</div>`:''}
+        <div class="oc-items">
+          ${o.items.map(i=>`<div class="item-line"><span>${i.name}${i.qty>1?' ×'+i.qty:''}</span><span>${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span></div>`).join('')}
+        </div>
+        <div class="oc-totals">
+          <div class="trow strike"><span>Без скидки:</span><span>${o.original.toLocaleString('ru-RU')} ₩</span></div>
+          <div class="trow disc"><span>Скидка 40%:</span><span>−${(o.original-o.total).toLocaleString('ru-RU')} ₩</span></div>
+          <div class="trow bold"><span>Итого:</span><span>${o.total.toLocaleString('ru-RU')} ₩</span></div>
+        </div>
+        ${!o.paid?`<button onclick="markStaffPaid('${o.id}')" style="width:100%;padding:10px;background:#9C27B0;color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;cursor:pointer;margin-top:8px">✅ Принять оплату долга</button>`:''}
+      </div>`).join('');
+    return;
+  }
+
+  let filtered=currentTab==='all'?orders.filter(o=>o.source!=='staff'):orders.filter(o=>o.status===currentTab&&o.source!=='staff');
   if(!filtered.length){
     el.innerHTML='<div class="queue-empty"><div class="ei">'+(currentTab==='done'?'✅':'☕')+'</div><p>Нет заказов</p></div>';
     return;
@@ -1146,7 +1204,7 @@ async function confirmStaffOrder(){
   
   const order={
     id:makeCode('ST'),
-    guest:staffName+' (персонал)',
+    guest:staffName,
     items:items.map(i=>({name:i.name,price:Math.round(i.price*0.6),qty:i.qty})),
     original:origTotal,
     discount:40,
@@ -1156,7 +1214,8 @@ async function confirmStaffOrder(){
     status:'new',
     source:'staff',
     time:Date.now(),
-    note:payMode==='debt'?'В долг — '+staffName:''
+    note:payMode==='debt'?'💸 В долг: '+staffName:null,
+    debtorName:payMode==='debt'?staffName:null,
   };
   
   orders.unshift(order);
@@ -1219,6 +1278,16 @@ function filterMenuCat(cat, btn){
     btn.style.borderColor = 'var(--sunset)';
   }
   renderMenuPanel();
+}
+
+async function markStaffPaid(orderId){
+  const order = orders.find(o=>o.id===orderId);
+  if(!order) return;
+  order.paid = true;
+  order.payMethod = 'cash';
+  await saveOrder(order);
+  renderQueue();
+  notify('✅ Долг погашен: ' + order.guest);
 }
 </script>
 
