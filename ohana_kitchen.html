@@ -225,9 +225,7 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
     <div class="name-row">
       <input type="text" id="guest-name" placeholder="Имя / стол (необязательно)" maxlength="30">
     </div>
-    <div class="name-row" style="margin-top:4px">
-      <input type="text" id="order-note" placeholder="📝 Пометка: без льда, аллергия на молоко..." maxlength="100" style="background:#FFFDE7;border-color:#FFD54F">
-    </div>
+
     <div style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px" id="cat-filters">
       <button class="cat-filter-btn active" onclick="filterMenuCat('all',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sunset);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Всё</button>
       <button class="cat-filter-btn" onclick="filterMenuCat('coffee',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">☕ Кофе</button>
@@ -256,6 +254,10 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
         <span>Скидка <span id="basket-disc-pct">0</span>%:</span><span id="basket-disc-amt">−0 ₩</span>
       </div>
       <div class="basket-total"><span>К оплате:</span><span id="basket-total">0 ₩</span></div>
+      <div style="margin-bottom:8px">
+        <input type="text" id="order-note" placeholder="📝 Пометка к заказу (без льда, аллергия...)" maxlength="100"
+          style="width:100%;background:#FFFDE7;border:1.5px solid #FFD54F;border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:var(--text);outline:none;box-sizing:border-box">
+      </div>
       <button class="accept-btn" id="accept-btn" onclick="openAcceptModal()" disabled>Принять заказ 🌺</button>
     </div>
   </div>
@@ -515,6 +517,7 @@ function subscribeRealtime(){
   supa.channel('ohana-rt')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},payload=>{
       const row=payload.new;
+      if(orders.find(o=>o.id===row.id)) return;
       const m=dbToOrder(row);
       orders.unshift(m);
       renderQueue();
@@ -551,9 +554,7 @@ function updateClock(){
 setInterval(updateClock,1000); updateClock();
 
 function fmtMoney(v){
-  if(v>=1000000) return (v/1000000).toFixed(1)+' млн ₩';
-  if(v>=1000) return Math.round(v/1000)+' тыс ₩';
-  return v+' ₩';
+  return v.toLocaleString('ru-RU')+' ₩';
 }
 function elapsed(ts){
   const m=Math.floor((Date.now()-ts)/60000);
@@ -711,7 +712,7 @@ function renderQueue(){
       <div class="action-row">
         <button class="act-btn btn-discount" onclick="openDiscountModal('${o.id}')">🏷 Скидка</button>
         <button class="act-btn" style="background:#FFF8E1;color:#856404;border-color:#FFD54F" onclick="openNoteModal('${o.id}','${(o.note||'').replace(/'/g,'')}')">📝 Заметка</button>
-        <button class="act-btn" style="background:#E3F2FD;color:#1565C0;border-color:#90CAF9" onclick="openAddItemsModal('${o.id}')">➕ Добавить</button>
+        <button class="act-btn" style="background:#E3F2FD;color:#1565C0;border-color:#90CAF9" onclick="openAddItemsModal('${o.id}')">✏️ Изменить</button>
         <button class="act-btn ${o.paid?'btn-pay':'btn-pay unpaid'}" onclick="openChangePayModal('${o.id}')">${o.paid?'✅ Оплачен':'❌ Оплатить'}</button>
         ${!o.paid?`<button class="act-btn btn-later" onclick="openDebtPayModal('${o.id}')">💸 Долг</button>`:''}
       </div>
@@ -1074,8 +1075,14 @@ function openAddItemsModal(orderId){
   aimBasket = {};
   const order = orders.find(o=>o.id===orderId);
   if(!order) return;
+  // Pre-fill with existing items - match by name to get menu ID
+  order.items.forEach(i=>{
+    const menuItem = MENU.find(m=>m.name===i.name);
+    const key = menuItem ? menuItem.id : i.name;
+    aimBasket[key] = {id:key, name:i.name, price:i.price, qty:i.qty};
+  });
   const current = document.getElementById('aim-current');
-  current.innerHTML = `<b>${order.guest||'Заказ'}</b> · ${order.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')} · ${order.total.toLocaleString('ru-RU')} ₩`;
+  current.innerHTML = `<b>${order.guest||'Заказ'}</b> · ${order.total.toLocaleString('ru-RU')} ₩<br><span style="font-size:11px;color:var(--muted)">Добавьте или уберите позиции</span>`;
   renderAimMenu(MENU);
   renderAimBasket();
   document.getElementById('aim-search').value = '';
@@ -1129,17 +1136,14 @@ function renderAimBasket(){
 
 async function confirmAddItems(){
   const items=Object.values(aimBasket);
-  if(!items.length){notify('Добавьте хотя бы один напиток');return;}
+  if(!items.length){notify('Выберите хотя бы один напиток');return;}
   const order=orders.find(o=>o.id===aimOrderId);
   if(!order)return;
-  const addTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
-  items.forEach(ni=>{
-    const ex=order.items.find(i=>i.name===ni.name);
-    if(ex){ex.qty=(ex.qty||1)+ni.qty;}
-    else{order.items.push({name:ni.name,price:ni.price,qty:ni.qty});}
-  });
-  order.original=(order.original||order.total)+addTotal;
-  order.total=Math.round(order.original*(1-(order.discount||0)/100));
+  // Replace all items with new basket
+  order.items = items.map(i=>({name:i.name,price:i.price,qty:i.qty}));
+  const newTotal = items.reduce((s,i)=>s+i.price*i.qty,0);
+  order.original = newTotal;
+  order.total = Math.round(newTotal*(1-(order.discount||0)/100));
   await saveOrder(order);
   closeModal('add-items-modal');
   renderQueue();
@@ -1185,6 +1189,9 @@ function renderSoMenu(items){
 }
 
 function soQty(id,delta,name,price){
+  // Use staff fixed price if applicable
+  const STAFF_PRICES = {'Американо маленький (hot)':2000,'Американо маленький (ice)':2000,'Американо большой (hot)':2000,'Американо большой (ice)':2000,'Маленький американо':2000,'Большой американо':2000};
+  if(STAFF_PRICES[name]) price = STAFF_PRICES[name];
   if(!soBasket[id]) soBasket[id]={id,name,price,qty:0};
   soBasket[id].qty=Math.max(0,soBasket[id].qty+delta);
   if(!soBasket[id].qty) delete soBasket[id];
@@ -1215,7 +1222,9 @@ function renderSoBasket(){
 async function confirmStaffOrder(){
   const items=Object.values(soBasket);
   if(!items.length){notify('Добавьте хотя бы один напиток');return;}
-  const staffName=document.getElementById('so-staff-name').value;
+  const so_sel = document.getElementById('so-staff-name');
+  const so_custom = document.getElementById('so-staff-custom');
+  const staffName = so_sel.value === 'Другой' ? (so_custom?.value.trim()||'Другой') : so_sel.value;
   const payMode=document.getElementById('so-pay').value;
   const origTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
   const finalTotal=Math.round(origTotal*0.6);
@@ -1307,6 +1316,13 @@ async function markStaffPaid(orderId){
   renderQueue();
   notify('✅ Долг погашен: ' + order.guest);
 }
+
+function toggleStaffCustomName(sel){
+  const custom = document.getElementById('so-staff-custom');
+  if(!custom) return;
+  custom.style.display = sel.value === 'Другой' ? 'block' : 'none';
+  if(sel.value === 'Другой') custom.focus();
+}
 </script>
 
 <!-- ADD ITEMS MODAL -->
@@ -1361,11 +1377,14 @@ async function markStaffPaid(orderId){
     <div class="form-row" style="margin-bottom:12px">
       <div style="flex:1">
         <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">Сотрудник</label>
-        <select id="so-staff-name" class="form-select" style="margin-top:4px;width:100%">
+        <select id="so-staff-name" class="form-select" style="margin-top:4px;width:100%" onchange="toggleStaffCustomName(this)">
           <option value="Сергей">Сергей</option>
           <option value="Катя">Катя</option>
-          <option value="Другой">Другой</option>
+          <option value="Александр Ким">Александр Ким</option>
+          <option value="Другой">Другой...</option>
         </select>
+        <input type="text" id="so-staff-custom" placeholder="Введите имя" maxlength="30"
+          style="display:none;margin-top:6px;width:100%;background:var(--sand);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text);outline:none;box-sizing:border-box">
       </div>
       <div style="flex:1">
         <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">Оплата</label>
