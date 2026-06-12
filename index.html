@@ -3678,7 +3678,8 @@ async function payWithPortOne({amount, orderId, name, buyerName, buyerContact, o
   IMP.init(IMP_CODE);
   
   IMP.request_pay({
-    pg: 'nice_v2.channel-key-805c13e4-61c4-4ced-9683-b58919411241',
+    pg: 'nice_v2',
+    channel_key: 'channel-key-805c13e4-61c4-4ced-9683-b58919411241',
     pay_method: 'card',
     merchant_uid: orderId,
     name: name || 'OHANA',
