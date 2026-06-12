@@ -73,6 +73,9 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
 
 /* ACTION BUTTONS ROW */
 .action-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.staff-badge{background:rgba(123,47,190,.12);color:#7B2FBE;border:1px solid rgba(123,47,190,.25);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:800}
+.order-card.s-staff{background:linear-gradient(135deg,rgba(123,47,190,.06),rgba(123,47,190,.02));border-color:#C4A0E8}
+.order-card.s-staff-debt{background:linear-gradient(135deg,rgba(220,53,69,.06),rgba(220,53,69,.02));border-color:#F5A0A8}
 .act-btn{flex:1;min-width:70px;padding:8px 6px;border-radius:10px;border:2px solid;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;text-align:center;white-space:nowrap}
 .act-btn:hover{filter:brightness(.93)}
 .btn-discount{background:#F3E5F5;color:#6A1B9A;border-color:#9C27B0}
@@ -211,6 +214,9 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
     </div>
     <div class="name-row">
       <input type="text" id="guest-name" placeholder="Имя / стол (необязательно)" maxlength="30">
+    </div>
+    <div class="name-row" style="margin-top:4px">
+      <input type="text" id="order-note" placeholder="📝 Пометка: без льда, аллергия на молоко..." maxlength="100" style="background:#FFFDE7;border-color:#FFD54F">
     </div>
     <div class="menu-scroll" id="menu-scroll"></div>
     <div class="basket">
@@ -452,12 +458,56 @@ async function saveOrder(order){
 async function deleteOrder(id){
   await supa.from('orders').delete().eq('id',id);
 }
+function playNewOrderSound(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [523,659,784].forEach((freq,i)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.frequency.value=freq;
+      osc.type='sine';
+      gain.gain.setValueAtTime(0.3,ctx.currentTime+i*0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.15+0.3);
+      osc.start(ctx.currentTime+i*0.15);
+      osc.stop(ctx.currentTime+i*0.15+0.3);
+    });
+  }catch(e){}
+  // Flash screen
+  const flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;background:rgba(255,200,0,.3);z-index:9999;pointer-events:none;animation:flashAnim .5s ease-out forwards';
+  document.head.insertAdjacentHTML('beforeend','<style>@keyframes flashAnim{0%{opacity:1}100%{opacity:0}}</style>');
+  document.body.appendChild(flash);
+  setTimeout(()=>flash.remove(),500);
+  // Browser notification
+  if(Notification.permission==='granted'){
+    new Notification('☕ Новый заказ!',{body:'Пришёл новый заказ на кухню',icon:'/favicon.ico'});
+  }
+}
+
+function requestNotifPermission(){
+  if(Notification.permission==='default') Notification.requestPermission();
+}
+
 function subscribeRealtime(){
   supa.channel('ohana-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},payload=>{
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders'},payload=>{
       const row=payload.new;
-      if(payload.eventType==='DELETE'){orders=orders.filter(o=>o.id!==payload.old.id);}
-      else{const idx=orders.findIndex(o=>o.id===row.id);const m=dbToOrder(row);if(idx>=0)orders[idx]=m;else orders.unshift(m);}
+      const m=dbToOrder(row);
+      orders.unshift(m);
+      renderQueue();
+      playNewOrderSound();
+      notify('🔔 Новый заказ: '+(row.guest||row.id));
+    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders'},payload=>{
+      const row=payload.new;
+      const idx=orders.findIndex(o=>o.id===row.id);
+      const m=dbToOrder(row);
+      if(idx>=0)orders[idx]=m;else orders.unshift(m);
+      renderQueue();
+    })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'orders'},payload=>{
+      orders=orders.filter(o=>o.id!==payload.old.id);
       renderQueue();
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'menu'},()=>{loadMenuFromDB();})
@@ -550,7 +600,7 @@ function renderQueue(){
   filtered=[...filtered].sort((a,b)=>order_map[a.status]!==order_map[b.status]?order_map[a.status]-order_map[b.status]:a.time-b.time);
 
   el.innerHTML=filtered.map(o=>`
-    <div class="order-card s-${o.status}">
+    <div class="order-card ${o.source==='staff'?(o.paid?'s-staff':'s-staff-debt'):'s-'+o.status}">
       <div class="oc-head">
         <div class="oc-name">${o.guest||'Гость'}</div>
         <div class="oc-badges">
@@ -559,6 +609,7 @@ function renderQueue(){
           ${o.discount>0?`<span class="badge b-discount">−${o.discount}%</span>`:''}
         </div>
       </div>
+      ${o.note?`<div style="background:#FFF8E1;border-left:3px solid #FFC107;border-radius:0 6px 6px 0;padding:4px 10px;margin-bottom:6px;font-size:12px;font-weight:800;color:#856404">📝 \${o.note}</div>`:''}
       <div class="oc-items">
         ${o.items.map(i=>`<div class="item-line"><span>${i.name}${i.qty>1?' ×'+i.qty:''}</span><span>${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span></div>`).join('')}
       </div>
@@ -575,6 +626,8 @@ function renderQueue(){
       </div>`}
       <div class="action-row">
         <button class="act-btn btn-discount" onclick="openDiscountModal('${o.id}')">🏷 Скидка</button>
+        <button class="act-btn" style="background:#FFF8E1;color:#856404;border-color:#FFD54F" onclick="openNoteModal('${o.id}','${(o.note||'').replace(/'/g,\"\\'\")}')">📝 Заметка</button>
+        <button class="act-btn" style="background:#E3F2FD;color:#1565C0;border-color:#90CAF9" onclick="openAddItemsModal('${o.id}')">➕ Добавить</button>
         <button class="act-btn ${o.paid?'btn-pay':'btn-pay unpaid'}" onclick="openChangePayModal('${o.id}')">${o.paid?'✅ Оплачен':'❌ Оплатить'}</button>
         ${!o.paid?`<button class="act-btn btn-later" onclick="openDebtPayModal('${o.id}')">💸 Долг</button>`:''}
       </div>
@@ -760,12 +813,14 @@ function confirmAccept(){
   const original=items.reduce((s,i)=>s+i.price*i.qty,0);
   const total=Math.round(original*(1-currentDisc/100));
   const guest=document.getElementById('guest-name').value.trim()||'Гость';
+  const orderNote=(document.getElementById('order-note')?.value||'').trim();
   const isPaid=currentPayMethod!=='later';
   const order={
     id:makeCode(),
     guest,
     items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),
     original,discount:currentDisc,total,
+    note:orderNote||null,
     time:Date.now(),
     status:'new',
     source:'place',
@@ -898,6 +953,327 @@ renderBasket();
 renderQueue();
 subscribeRealtime();
 loadOrders();
+
+// ─── ADD ITEMS TO ORDER ──────────────────────────
+let aimOrderId = null;
+let aimBasket = {};
+
+function openAddItemsModal(orderId){
+  aimOrderId = orderId;
+  aimBasket = {};
+  const order = orders.find(o=>o.id===orderId);
+  if(!order) return;
+  const current = document.getElementById('aim-current');
+  current.innerHTML = `<b>${order.guest||'Заказ'}</b> · ${order.items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ')} · ${order.total.toLocaleString('ru-RU')} ₩`;
+  renderAimMenu(menuItems);
+  renderAimBasket();
+  document.getElementById('aim-search').value = '';
+  openModal('add-items-modal');
+}
+
+function filterAimMenu(q){
+  renderAimMenu(q ? menuItems.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : menuItems);
+}
+
+function renderAimMenu(items){
+  const el = document.getElementById('aim-menu-list');
+  if(!items||!items.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Ничего не найдено</div>';return;}
+  const cats={coffee:'☕',notcoffee:'🫖',noncoffee:'🫖',tea:'🍵',lemonade:'🍋',milkshake:'🥤',seasonal:'🌸',food:'🥐'};
+  el.innerHTML = items.map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px dashed var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:800">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${(cats[m.category]||'')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:13px;font-weight:800;color:var(--sunset)">${m.price.toLocaleString('ru-RU')} ₩</span>
+        <button onclick="aimQty('${m.id}',-1,'${m.name.replace(/'/g,'')}',${m.price})" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sand);cursor:pointer;font-size:16px;font-weight:900">−</button>
+        <span id="aim-qty-${m.id}" style="font-size:14px;font-weight:900;min-width:18px;text-align:center">${aimBasket[m.id]?aimBasket[m.id].qty:0}</span>
+        <button onclick="aimQty('${m.id}',1,'${m.name.replace(/'/g,'')}',${m.price})" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sand);cursor:pointer;font-size:16px;font-weight:900">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function aimQty(id,delta,name,price){
+  if(!aimBasket[id]) aimBasket[id]={id,name,price,qty:0};
+  aimBasket[id].qty=Math.max(0,aimBasket[id].qty+delta);
+  if(!aimBasket[id].qty) delete aimBasket[id];
+  const el=document.getElementById('aim-qty-'+id);
+  if(el) el.textContent=aimBasket[id]?aimBasket[id].qty:0;
+  renderAimBasket();
+}
+
+function renderAimBasket(){
+  const items=Object.values(aimBasket);
+  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const b=document.getElementById('aim-basket');
+  const bi=document.getElementById('aim-basket-items');
+  const bt=document.getElementById('aim-basket-total');
+  if(!items.length){if(b)b.style.display='none';return;}
+  if(b)b.style.display='block';
+  if(bi)bi.innerHTML=items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>${i.name} ×${i.qty}</span><span>${(i.price*i.qty).toLocaleString('ru-RU')} ₩</span></div>`).join('');
+  if(bt)bt.textContent=total.toLocaleString('ru-RU')+' ₩';
+}
+
+async function confirmAddItems(){
+  const items=Object.values(aimBasket);
+  if(!items.length){notify('Добавьте хотя бы один напиток');return;}
+  const order=orders.find(o=>o.id===aimOrderId);
+  if(!order)return;
+  const addTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
+  items.forEach(ni=>{
+    const ex=order.items.find(i=>i.name===ni.name);
+    if(ex){ex.qty=(ex.qty||1)+ni.qty;}
+    else{order.items.push({name:ni.name,price:ni.price,qty:ni.qty});}
+  });
+  order.original=(order.original||order.total)+addTotal;
+  order.total=Math.round(order.original*(1-(order.discount||0)/100));
+  await saveOrder(order);
+  closeModal('add-items-modal');
+  renderQueue();
+  notify('✅ Добавлено: +'+addTotal.toLocaleString('ru-RU')+' ₩');
+}
+
+// ─── STAFF ORDERS ─────────────────────────────────
+let soBasket = {};
+
+function openStaffOrderModal(){
+  soBasket = {};
+  renderSoMenu(menuItems);
+  renderSoBasket();
+  document.getElementById('so-search').value = '';
+  openModal('staff-order-modal');
+}
+
+function filterSoMenu(q){
+  renderSoMenu(q ? menuItems.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())) : menuItems);
+}
+
+function renderSoMenu(items){
+  const el = document.getElementById('so-menu-list');
+  if(!items||!items.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted)">Ничего не найдено</div>';return;}
+  el.innerHTML = items.map(m=>{
+    const discPrice = Math.round(m.price * 0.6);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px dashed var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:800">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted)">
+          <span style="text-decoration:line-through">${m.price.toLocaleString('ru-RU')}</span>
+          → <span style="color:#7B2FBE;font-weight:900">${discPrice.toLocaleString('ru-RU')} ₩</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button onclick="soQty('${m.id}',-1,'${m.name.replace(/'/g,'')}',${m.price})" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sand);cursor:pointer;font-size:16px;font-weight:900">−</button>
+        <span id="so-qty-${m.id}" style="font-size:14px;font-weight:900;min-width:18px;text-align:center">${soBasket[m.id]?soBasket[m.id].qty:0}</span>
+        <button onclick="soQty('${m.id}',1,'${m.name.replace(/'/g,'')}',${m.price})" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sand);cursor:pointer;font-size:16px;font-weight:900">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function soQty(id,delta,name,price){
+  if(!soBasket[id]) soBasket[id]={id,name,price,qty:0};
+  soBasket[id].qty=Math.max(0,soBasket[id].qty+delta);
+  if(!soBasket[id].qty) delete soBasket[id];
+  const el=document.getElementById('so-qty-'+id);
+  if(el) el.textContent=soBasket[id]?soBasket[id].qty:0;
+  renderSoBasket();
+}
+
+function renderSoBasket(){
+  const items=Object.values(soBasket);
+  const origTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const finalTotal=Math.round(origTotal*0.6);
+  const discAmt=origTotal-finalTotal;
+  const b=document.getElementById('so-basket');
+  const bi=document.getElementById('so-basket-items');
+  if(!items.length){if(b)b.style.display='none';return;}
+  if(b)b.style.display='block';
+  if(bi)bi.innerHTML=items.map(i=>`
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:4px">
+      <span>${i.name} ×${i.qty}</span>
+      <span style="color:#7B2FBE">${Math.round(i.price*0.6*i.qty).toLocaleString('ru-RU')} ₩</span>
+    </div>`).join('');
+  document.getElementById('so-orig-total').textContent=origTotal.toLocaleString('ru-RU')+' ₩';
+  document.getElementById('so-discount-amt').textContent='-'+discAmt.toLocaleString('ru-RU')+' ₩';
+  document.getElementById('so-final-total').textContent=finalTotal.toLocaleString('ru-RU')+' ₩';
+}
+
+async function confirmStaffOrder(){
+  const items=Object.values(soBasket);
+  if(!items.length){notify('Добавьте хотя бы один напиток');return;}
+  const staffName=document.getElementById('so-staff-name').value;
+  const payMode=document.getElementById('so-pay').value;
+  const origTotal=items.reduce((s,i)=>s+i.price*i.qty,0);
+  const finalTotal=Math.round(origTotal*0.6);
+  
+  const order={
+    id:makeCode('ST'),
+    guest:staffName+' (персонал)',
+    items:items.map(i=>({name:i.name,price:Math.round(i.price*0.6),qty:i.qty})),
+    original:origTotal,
+    discount:40,
+    total:finalTotal,
+    paid:payMode==='now',
+    payMethod:payMode==='debt'?'debt':'cash',
+    status:'new',
+    source:'staff',
+    time:Date.now(),
+    note:payMode==='debt'?'В долг — '+staffName:''
+  };
+  
+  orders.unshift(order);
+  await saveOrder(order);
+  closeModal('staff-order-modal');
+  showTab('staff');
+  renderQueue();
+  notify('👤 Заказ оформлен: '+staffName+' · '+finalTotal.toLocaleString('ru-RU')+' ₩'+(payMode==='debt'?' (в долг)':''));
+}
+
+// ─── ORDER NOTES ──────────────────────────────────
+let noteOrderId = null;
+
+function openNoteModal(orderId, currentNote){
+  noteOrderId = orderId;
+  const el = document.getElementById('note-modal-text');
+  if(el) el.value = currentNote || '';
+  openModal('note-modal');
+  setTimeout(()=>el?.focus(), 100);
+}
+
+async function saveNote(){
+  const note = (document.getElementById('note-modal-text')?.value||'').trim();
+  const order = orders.find(o=>o.id===noteOrderId);
+  if(!order) return;
+  order.note = note || null;
+  await saveOrder(order);
+  closeModal('note-modal');
+  renderQueue();
+  notify(note ? '📝 Пометка сохранена' : '🗑 Пометка удалена');
+}
+
+async function clearNote(){
+  const order = orders.find(o=>o.id===noteOrderId);
+  if(!order) return;
+  order.note = null;
+  document.getElementById('note-modal-text').value = '';
+  await saveOrder(order);
+  closeModal('note-modal');
+  renderQueue();
+  notify('🗑 Пометка удалена');
+}
 </script>
+
+<!-- ADD ITEMS MODAL -->
+<div class="modal-overlay" id="add-items-modal" onclick="if(event.target===this)closeModal('add-items-modal')">
+  <div class="modal-box" style="max-width:480px;max-height:80vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:900">➕ Добавить к заказу</h3>
+      <button onclick="closeModal('add-items-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+    
+    <!-- Current order summary -->
+    <div id="aim-current" style="background:var(--sand2);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:700;color:var(--mid)"></div>
+    
+    <!-- Menu search -->
+    <input type="text" id="aim-search" placeholder="🔍 Найти напиток..." 
+      oninput="filterAimMenu(this.value)"
+      style="background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);outline:none;margin-bottom:10px">
+    
+    <!-- Menu list -->
+    <div id="aim-menu-list" style="flex:1;overflow-y:auto;margin-bottom:14px"></div>
+    
+    <!-- New items basket -->
+    <div id="aim-basket" style="background:var(--sand2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:none">
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Добавляем:</div>
+      <div id="aim-basket-items"></div>
+      <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:900;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+        <span>Доплата:</span>
+        <span id="aim-basket-total" style="color:var(--sunset)">0 ₩</span>
+      </div>
+    </div>
+    
+    <input type="text" id="aim-note" placeholder="📝 Пометка (необязательно)..."
+      style="width:100%;background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:9px 14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text);outline:none;margin-bottom:10px;box-sizing:border-box">
+    <button onclick="confirmAddItems()" 
+      style="width:100%;padding:14px;background:var(--sunset);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer">
+      ✅ Добавить к заказу
+    </button>
+  </div>
+</div>
+
+<!-- STAFF ORDER MODAL -->
+<div class="modal-overlay" id="staff-order-modal" onclick="if(event.target===this)closeModal('staff-order-modal')">
+  <div class="modal-box" style="max-width:480px;max-height:85vh;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <h3 style="font-size:16px;font-weight:900;margin:0">👤 Заказ для персонала</h3>
+        <p style="font-size:12px;color:var(--muted);margin:4px 0 0;font-weight:700">Скидка 40% · Учитывается отдельно</p>
+      </div>
+      <button onclick="closeModal('staff-order-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+
+    <div class="form-row" style="margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">Сотрудник</label>
+        <select id="so-staff-name" class="form-select" style="margin-top:4px;width:100%">
+          <option value="Сергей">Сергей</option>
+          <option value="Катя">Катя</option>
+          <option value="Другой">Другой</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase">Оплата</label>
+        <select id="so-pay" class="form-select" style="margin-top:4px;width:100%">
+          <option value="now">💵 Сразу</option>
+          <option value="debt">📋 В долг</option>
+        </select>
+      </div>
+    </div>
+
+    <input type="text" id="so-search" placeholder="🔍 Найти напиток..."
+      oninput="filterSoMenu(this.value)"
+      style="background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);outline:none;margin-bottom:10px">
+
+    <div id="so-menu-list" style="flex:1;overflow-y:auto;margin-bottom:14px"></div>
+
+    <div id="so-basket" style="display:none;background:linear-gradient(135deg,rgba(123,47,190,.08),rgba(123,47,190,.04));border:1.5px solid rgba(123,47,190,.25);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:#7B2FBE;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Выбрано:</div>
+      <div id="so-basket-items"></div>
+      <div style="border-top:1px dashed rgba(123,47,190,.2);margin-top:8px;padding-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px">
+          <span>Без скидки:</span><span id="so-orig-total">0 ₩</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#7B2FBE;font-weight:700;margin-bottom:4px">
+          <span>Скидка 40%:</span><span id="so-discount-amt">0 ₩</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--text)">
+          <span>Итого:</span><span id="so-final-total" style="color:#7B2FBE">0 ₩</span>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="confirmStaffOrder()"
+      style="width:100%;padding:14px;background:#7B2FBE;color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer">
+      ✅ Оформить заказ персонала
+    </button>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="note-modal" onclick="if(event.target===this)closeModal('note-modal')">
+  <div class="modal-box" style="max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:16px;font-weight:900;margin:0">📝 Пометка к заказу</h3>
+      <button onclick="closeModal('note-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
+    </div>
+    <textarea id="note-modal-text" rows="3" placeholder="Без льда, аллергия, горячий, для зала..."
+      style="width:100%;background:var(--sand);border:2px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--text);outline:none;resize:vertical;box-sizing:border-box;margin-bottom:14px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button onclick="clearNote()" style="flex:1;padding:12px;background:var(--sand2);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">🗑 Очистить</button>
+      <button onclick="saveNote()" style="flex:2;padding:12px;background:var(--sunset);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;cursor:pointer">✅ Сохранить</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
