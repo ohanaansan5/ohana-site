@@ -200,6 +200,7 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
   <button class="tab" onclick="showTab('ready',this)">Готово 🔔 <span class="cnt" id="cnt-ready">0</span></button>
   <button class="tab" onclick="showTab('done',this)">Выданы <span class="cnt" id="cnt-done">0</span></button>
   <button class="tab" onclick="showTab('debts',this)">Долги 💸 <span class="cnt" id="cnt-debts">0</span></button>
+  <button class="tab" style="border-color:#9C27B0;color:#9C27B0" onclick="showTab('staff',this)">👤 Персонал <span class="cnt" style="background:#9C27B0" id="cnt-staff">0</span></button>
 </div>
 
 <div class="main">
@@ -217,6 +218,16 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
     </div>
     <div class="name-row" style="margin-top:4px">
       <input type="text" id="order-note" placeholder="📝 Пометка: без льда, аллергия на молоко..." maxlength="100" style="background:#FFFDE7;border-color:#FFD54F">
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px" id="cat-filters">
+      <button class="cat-filter-btn active" onclick="filterMenuCat('all',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sunset);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Всё</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('coffee',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">☕ Кофе</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('notcoffee',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🫖 Не кофе</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('tea',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🍵 Чай</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('lemonade',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🍋 Лимонады</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('milkshake',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🥤 Коктейли</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('seasonal',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🌸 Сезонное</button>
+      <button class="cat-filter-btn" onclick="filterMenuCat('food',this)" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--sand);color:var(--mid);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🥐 Выпечка</button>
     </div>
     <div class="menu-scroll" id="menu-scroll"></div>
     <div class="basket">
@@ -544,6 +555,10 @@ function elapsed(ts){
 // ─── TABS ─────────────────────────────────────────
 function showTab(tab,btn){
   currentTab=tab;
+  // Update staff count badge
+  const staffCount = orders.filter(o=>o.source==='staff').length;
+  const staffCnt = document.getElementById('cnt-staff');
+  if(staffCnt) staffCnt.textContent = staffCount;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   renderQueue();
@@ -852,11 +867,16 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 
 // ─── MENU PANEL ───────────────────────────────────
 function renderMenuPanel(){
-  const cats=[...new Set(MENU.map(m=>m.cat))];
+  const filtered = currentMenuCat==='all' ? MENU : MENU.filter(m=>m.cat===currentMenuCat);
+  const cats=[...new Set(filtered.map(m=>m.cat))];
   let html='';
+  if(!filtered.length){
+    document.getElementById('menu-scroll').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-weight:700">Нет позиций в этой категории</div>';
+    return;
+  }
   cats.forEach(cat=>{
     html+=`<div class="menu-cat-label">${CAT_LABELS[cat]||cat}</div>`;
-    MENU.filter(m=>m.cat===cat).forEach(m=>{
+    filtered.filter(m=>m.cat===cat).forEach(m=>{
       const qty=basket[m.id]?.qty||0;
       html+=`<button class="menu-btn" onclick="addItem('${m.id}')">
         <span class="mn">${m.name}</span>
@@ -1163,6 +1183,22 @@ async function clearNote(){
   closeModal('note-modal');
   renderQueue();
   notify('🗑 Пометка удалена');
+}
+
+// ─── MENU CATEGORY FILTER ─────────────────────────
+let currentMenuCat = 'all';
+
+function filterMenuCat(cat, btn){
+  currentMenuCat = cat;
+  document.querySelectorAll('.cat-filter-btn').forEach(b=>{
+    b.style.background = 'var(--sand)';
+    b.style.color = 'var(--mid)';
+    b.style.borderColor = 'var(--border2)';
+  });
+  btn.style.background = 'var(--sunset)';
+  btn.style.color = '#fff';
+  btn.style.borderColor = 'var(--sunset)';
+  renderMenuPanel();
 }
 </script>
 
