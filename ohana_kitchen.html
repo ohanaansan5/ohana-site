@@ -107,6 +107,12 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
 .name-row input:focus{border-color:var(--sunset)}
 .menu-scroll{flex:1;overflow-y:auto;padding:6px}
 .menu-cat-label{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:7px 8px 3px;margin-top:2px}
+.menu-item-row{display:flex;align-items:center;padding:8px 6px;border-bottom:1px dashed var(--border);gap:6px;cursor:default}
+.menu-item-row .mn{flex:1;font-size:13px;font-weight:700;color:var(--text)}
+.menu-item-row .mp{font-size:12px;font-weight:800;color:var(--sunset);white-space:nowrap;min-width:56px;text-align:right}
+.menu-item-row .mq-val{font-size:14px;font-weight:900;min-width:20px;text-align:center;color:var(--text)}
+.qty-dec,.qty-inc{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);background:var(--sand);cursor:pointer;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;flex-shrink:0}
+.qty-inc{background:var(--sunset);color:#fff;border-color:var(--sunset)}
 .menu-btn{width:100%;display:flex;justify-content:space-between;align-items:center;padding:9px 10px;background:var(--sand);border:1.5px solid var(--border);border-radius:10px;margin-bottom:5px;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
 .menu-btn:hover{border-color:var(--sunset);background:var(--sand2)}
 .menu-btn .mn{font-size:13px;font-weight:800;color:var(--text);text-align:left}
@@ -128,9 +134,9 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
 .accept-btn:disabled{background:var(--border2);color:var(--muted);box-shadow:none;cursor:default}
 
 /* MODAL OVERLAY */
-.modal-overlay{position:fixed;inset:0;background:rgba(44,26,8,.55);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:60px 16px 20px;overflow-y:auto}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,10,0,.75);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:60px 16px 20px;overflow-y:auto}
 .modal-overlay.open{display:flex}
-.modal{background:var(--card);border-radius:20px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(44,26,8,.25);position:relative}
+.modal{background:#FDF6E3;border-radius:20px;padding:24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.4);position:relative}
 .modal h2{font-size:18px;font-weight:900;margin-bottom:6px;color:var(--text)}
 .modal .msub{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:18px}
 .modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);font-weight:900;line-height:1}
@@ -883,11 +889,13 @@ function renderMenuPanel(){
     html+=`<div class="menu-cat-label">${CAT_LABELS[cat]||cat}</div>`;
     filtered.filter(m=>m.cat===cat).forEach(m=>{
       const qty=basket[m.id]?.qty||0;
-      html+=`<button class="menu-btn" onclick="addItem('${m.id}')">
+      html+=`<div class="menu-item-row">
         <span class="mn">${m.name}</span>
         <span class="mp">${m.price.toLocaleString('ru-RU')} ₩</span>
-        ${qty>0?`<span class="mq">${qty}</span>`:'<span style="width:22px"></span>'}
-      </button>`;
+        <button class="qty-dec" onclick="event.stopPropagation();removeItem('${m.id}')">−</button>
+        <span class="mq-val">${qty||0}</span>
+        <button class="qty-inc" onclick="event.stopPropagation();addItem('${m.id}')">+</button>
+      </div>`;
     });
   });
   document.getElementById('menu-scroll').innerHTML=html;
@@ -1216,7 +1224,7 @@ function filterMenuCat(cat, btn){
 
 <!-- ADD ITEMS MODAL -->
 <div class="modal-overlay" id="add-items-modal" onclick="if(event.target===this)closeModal('add-items-modal')">
-  <div class="modal-box" style="max-width:480px;max-height:80vh;display:flex;flex-direction:column">
+  <div class="modal-box" style="max-width:480px;max-height:80vh;display:flex;flex-direction:column;background:#FDF6E3;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="font-size:16px;font-weight:900">➕ Добавить к заказу</h3>
       <button onclick="closeModal('add-items-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
@@ -1254,7 +1262,7 @@ function filterMenuCat(cat, btn){
 
 <!-- STAFF ORDER MODAL -->
 <div class="modal-overlay" id="staff-order-modal" onclick="if(event.target===this)closeModal('staff-order-modal')">
-  <div class="modal-box" style="max-width:480px;max-height:85vh;display:flex;flex-direction:column">
+  <div class="modal-box" style="max-width:480px;max-height:85vh;display:flex;flex-direction:column;background:#FDF6E3;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div>
         <h3 style="font-size:16px;font-weight:900;margin:0">👤 Заказ для персонала</h3>
@@ -1312,7 +1320,7 @@ function filterMenuCat(cat, btn){
 
 <!-- NOTE MODAL -->
 <div class="modal-overlay" id="note-modal" onclick="if(event.target===this)closeModal('note-modal')">
-  <div class="modal-box" style="max-width:380px">
+  <div class="modal-box" style="max-width:380px;background:#FDF6E3;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="font-size:16px;font-weight:900;margin:0">📝 Пометка к заказу</h3>
       <button onclick="closeModal('note-modal')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">✕</button>
