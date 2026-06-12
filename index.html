@@ -4305,6 +4305,50 @@ function backToBookingForm(){
   document.getElementById('booking-success').style.display='none';
   document.getElementById('booking-form-wrap').style.display='block';
 }
+
+async function confirmDrinkPayment(orderId){
+  try{
+    // Mark as paid in Supabase
+    await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/orders?id=eq.'+orderId, {
+      method:'PATCH',
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({paid:true, status:'new'})
+    });
+    // Get order details
+    const r = await fetch('https://gaqzqfgpatelsrbyyofl.supabase.co/rest/v1/orders?id=eq.'+orderId, {
+      headers:{'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXpxZmdwYXRlbHNyYnl5b2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Njc3MzAsImV4cCI6MjA5NjU0MzczMH0.UnTN27NmfuSTrU_GcO6vuXIlTJA42VCBQPW7H62oT60'}
+    });
+    const rows = await r.json();
+    const order = rows && rows[0];
+    if(!order) return;
+    // Send QR via bot
+    const botUrl = localStorage.getItem('ohana_bot_url')||'https://adaptable-enjoyment-production.up.railway.app';
+    const contact = order.guest || '';
+    if(contact){
+      const resp = await fetch(botUrl+'/cart-confirm', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          order_id: orderId,
+          contact: contact,
+          guest_name: order.guest||'Гость',
+          items: order.items||[],
+          total: order.total||0,
+          pay_method: order.pay_method||'transfer'
+        })
+      });
+      const result = await resp.json();
+      if(result.sent) notify('✅ Оплата подтверждена · QR-чек отправлен в Telegram!');
+      else notify('✅ Оплата подтверждена · QR не доставлен (гость не писал боту)');
+    } else {
+      notify('✅ Оплата подтверждена');
+    }
+    renderStaffDrinks();
+  }catch(e){
+    console.error('Confirm drink error:', e);
+    notify('⚠️ Ошибка подтверждения');
+  }
+}
 </script>
 <div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
 
