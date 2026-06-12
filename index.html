@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="OHANA">
+<meta name="theme-color" content="#E8651A">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23E8651A'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle'%3E🌺%3C/text%3E%3C/svg%3E">
 <title>OHANA — Ивент-кафе · Ансан</title>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -703,6 +710,7 @@ nav{
   .dash-grid{grid-template-columns:1fr}
 }
 </style>
+<script src="https://cdn.iamport.kr/v1/iamport.js"></script>
 </head>
 <body>
 
@@ -3424,27 +3432,36 @@ async function choosePayment(method){
       notify('⚠️ Бот недоступен, но реквизиты показаны выше');
     }
   } else {
-    // Card - notify staff + guest
-    try{
-      const resp = await fetch(botUrl+'/payment-method',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          booking_id: bookingId,
-          contact: contact,
-          guest_name: guestName,
-          method: 'card',
-          booking_type: successEl.dataset.bookingType||'',
-          event_date: successEl.dataset.eventDate||'',
-          booking_time: successEl.dataset.eventTime||''
-        })
-      });
-      const result = await resp.json();
-      console.log('Bot card response:', result);
-      if(result.ok) notify('📱 Уведомление отправлено в Telegram!');
-    }catch(e){
-      console.error('Bot card error:',e);
-      notify('⚠️ Бот временно недоступен');
+    // Card - open PortOne payment
+    const bookingType = successEl.dataset.bookingType||'Бронирование';
+    const eventDate = successEl.dataset.eventDate||'';
+    
+    // Get price from event if available
+    const evPrice = EVENTS.find(e=>bookingType.includes(e.title))?.price_num || 0;
+    
+    if(evPrice > 0){
+      // Pay via PortOne
+      document.getElementById('payment-card-block').style.display = 'block';
+      document.getElementById('payment-card-block').innerHTML = `
+        <div style="font-size:14px;font-weight:700;line-height:1.7;margin-bottom:16px">
+          💳 Оплата картой онлайн<br>
+          <strong style="color:var(--sunset)">${evPrice.toLocaleString('ru-RU')} ₩</strong>
+        </div>
+        <button onclick="startCardPayment('${bookingId}','${guestName}','${contact}',${evPrice},'${bookingType}')"
+          style="width:100%;padding:14px;background:#3182f6;color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer">
+          💳 Оплатить ${evPrice.toLocaleString('ru-RU')} ₩
+        </button>`;
+    } else {
+      // No price set - notify staff
+      document.getElementById('payment-card-block').style.display = 'block';
+      try{
+        const resp = await fetch(botUrl+'/payment-method',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({booking_id:bookingId,contact,guest_name:guestName,method:'card',booking_type:bookingType,event_date:eventDate})
+        });
+        if((await resp.json()).ok) notify('📱 Уведомление отправлено!');
+      }catch(e){ notify('⚠️ Бот недоступен'); }
     }
   }
 }
@@ -3518,6 +3535,156 @@ async function submitCartOrder(payMethod){
   updateCartBar();
   closeCartSidebar();
 }
+
+
+// ─── PWA ──────────────────────────────────────────
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log('SW registered:', reg.scope))
+    .catch(err => console.log('SW error:', err));
+}
+
+// Install prompt
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner after 3 seconds
+  setTimeout(() => {
+    if(deferredPrompt) showInstallBanner();
+  }, 3000);
+});
+
+function showInstallBanner(){
+  // Don't show if already installed
+  if(window.matchMedia('(display-mode: standalone)').matches) return;
+  if(localStorage.getItem('pwa_dismissed')) return;
+  
+  const banner = document.createElement('div');
+  banner.id = 'pwa-banner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--sunset);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:12px;z-index:500;box-shadow:0 4px 20px rgba(232,101,26,.4);max-width:320px;width:calc(100% - 40px)';
+  banner.innerHTML = `
+    <span style="font-size:24px">🌺</span>
+    <div style="flex:1">
+      <div>Установить приложение OHANA</div>
+      <div style="font-size:11px;opacity:.85;font-weight:700">Открывай без браузера, как приложение</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="installPWA()" style="background:#fff;color:var(--sunset);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif">Установить</button>
+      <button onclick="dismissPWA()" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Не сейчас</button>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+async function installPWA(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const result = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('pwa-banner')?.remove();
+  if(result.outcome === 'accepted'){
+    notify('✅ Приложение установлено!');
+  }
+}
+
+function dismissPWA(){
+  document.getElementById('pwa-banner')?.remove();
+  localStorage.setItem('pwa_dismissed', '1');
+}
+
+// iOS install hint
+if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone){
+  setTimeout(()=>{
+    if(localStorage.getItem('pwa_dismissed')) return;
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--sunset);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:800;z-index:500;box-shadow:0 4px 20px rgba(232,101,26,.4);max-width:320px;width:calc(100% - 40px);text-align:center';
+    banner.innerHTML = `<div style="font-size:20px;margin-bottom:6px">🌺 Установить OHANA</div><div style="font-size:12px;opacity:.9;font-weight:700;line-height:1.6">Нажми <b>Поделиться</b> (⬆️) → <b>На экран «Домой»</b></div><button onclick="this.parentElement.remove();localStorage.setItem('pwa_dismissed','1')" style="margin-top:8px;background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 16px;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif">Понятно</button>`;
+    document.body.appendChild(banner);
+  }, 3000);
+}
+
+
+// ─── PORTONE PAYMENT ──────────────────────────────
+const IMP_CODE = 'imp78526555';
+const CHANNEL_KEY = 'channel-key-805c13e4-61c4-4ced-9683-b58919411241';
+
+
+function startCardPayment(bookingId, guestName, contact, amount, itemName){
+  payWithPortOne({
+    amount,
+    orderId: bookingId,
+    name: itemName || 'OHANA — ' + itemName,
+    buyerName: guestName,
+    buyerContact: contact,
+    onSuccess: async (rsp) => {
+      // Update booking status
+      notify('✅ Оплата прошла! QR-билет придёт в Telegram.');
+      document.getElementById('payment-card-block').innerHTML = `
+        <div style="text-align:center;padding:16px">
+          <div style="font-size:36px;margin-bottom:8px">✅</div>
+          <div style="font-size:15px;font-weight:900;color:var(--palm)">Оплата прошла!</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px">QR-билет придёт в Telegram @${contact}</div>
+        </div>`;
+    },
+    onFail: (msg) => {
+      notify('❌ Ошибка оплаты: ' + msg);
+    }
+  });
+}
+
+function initPortOne(){
+  if(typeof IMP !== 'undefined'){
+    IMP.init(IMP_CODE);
+    console.log('PortOne initialized');
+  }
+}
+
+async function payWithPortOne({amount, orderId, name, buyerName, buyerContact, onSuccess, onFail}){
+  if(typeof IMP === 'undefined'){
+    alert('Система оплаты недоступна. Проверьте интернет-соединение.');
+    return;
+  }
+  IMP.init(IMP_CODE);
+  
+  IMP.request_pay({
+    pg: 'nice_v2.channel-key-805c13e4-61c4-4ced-9683-b58919411241',
+    pay_method: 'card',
+    merchant_uid: orderId,
+    name: name || 'OHANA',
+    amount: amount,
+    buyer_name: buyerName || 'Гость',
+    buyer_tel: buyerContact || '010-0000-0000',
+    buyer_email: '',
+    m_redirect_url: window.location.href,
+    locale: 'ko',
+  }, async function(rsp){
+    if(rsp.success){
+      console.log('Payment success:', rsp);
+      // Verify on server via bot
+      try{
+        const botUrl = localStorage.getItem('ohana_bot_url') || 'https://adaptable-enjoyment-production.up.railway.app';
+        await fetch(botUrl + '/portone-webhook', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            status: 'paid',
+            imp_uid: rsp.imp_uid,
+            merchant_uid: orderId,
+            amount: amount,
+          })
+        });
+      } catch(e) { console.warn('Bot webhook error:', e); }
+      if(onSuccess) onSuccess(rsp);
+    } else {
+      console.log('Payment failed:', rsp.error_msg);
+      if(onFail) onFail(rsp.error_msg);
+    }
+  });
+}
+
+// Initialize on load
+window.addEventListener('load', initPortOne);
 
 // ─── CAMERA QR SCANNER ────────────────────────────
 let cameraStream=null;
