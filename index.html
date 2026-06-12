@@ -3453,7 +3453,16 @@ async function choosePayment(method){
         </button>`;
     } else {
       // No price set - notify staff
+      // No price set - show manual payment info
       document.getElementById('payment-card-block').style.display = 'block';
+      document.getElementById('payment-card-block').innerHTML = `
+        <div style="font-size:14px;font-weight:700;line-height:1.7;margin-bottom:12px">
+          💳 Стоимость уточняется.<br>Мы свяжемся с вами в Telegram.
+        </div>
+        <a href="https://t.me/ohana_ansan_bot" target="_blank"
+          style="display:flex;align-items:center;justify-content:center;gap:8px;background:#229ED9;color:#fff;border-radius:12px;padding:12px;text-decoration:none;font-size:14px;font-weight:900;font-family:'Nunito',sans-serif">
+          ✈️ Написать боту @ohana_ansan_bot
+        </a>`;
       try{
         const resp = await fetch(botUrl+'/payment-method',{
           method:'POST',
@@ -3526,8 +3535,29 @@ async function submitCartOrder(payMethod){
 
   if(payMethod === 'transfer'){
     document.getElementById('cart-step-waiting-transfer').style.display = 'block';
+    // Update bot link with order id
+    const botLink = document.getElementById('cart-bot-link');
+    if(botLink) botLink.href = 'https://t.me/ohana_ansan_bot?start=' + code;
   } else {
-    document.getElementById('cart-step-waiting-card').style.display = 'block';
+    // Card - open PortOne payment immediately
+    const itemNames = items.map(i=>i.name+(i.qty>1?' ×'+i.qty:'')).join(', ');
+    payWithPortOne({
+      amount: total,
+      orderId: code,
+      name: 'OHANA — ' + itemNames.substring(0,30),
+      buyerName: tg,
+      buyerContact: '010-0000-0000',
+      onSuccess: async (rsp) => {
+        document.getElementById('cart-step-waiting-card').style.display = 'block';
+        if(summaryCard) summaryCard.innerHTML = `✅ Оплата прошла!<br>QR-чек придёт в Telegram ${tg}`;
+        notify('✅ Оплата прошла! QR-чек придёт в Telegram');
+      },
+      onFail: (msg) => {
+        // Payment failed - go back to payment choice
+        document.getElementById('cart-step-pay').style.display = 'block';
+        notify('❌ Ошибка оплаты: ' + msg);
+      }
+    });
   }
 
   // Clear cart
