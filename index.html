@@ -1587,8 +1587,11 @@ nav{
       <div style="text-align:center;padding:40px;color:var(--muted);font-weight:700;grid-column:1/-1">Скоро здесь появятся фото с наших мероприятий 🌺</div>
     </div>
   </div>
-  <!-- FOOTER -->
-  <footer class="site-footer">
+
+</div>
+<!-- FOOTER -->
+<footer class="site-footer" id="site-footer" style="display:none">
+
   <div class="footer-logo">OHANA <span>🌺</span></div>
   <div class="footer-motto">Не место, а люди! · Ohana means family</div>
   <div class="footer-links">
@@ -1598,8 +1601,9 @@ nav{
     <span class="footer-link" onclick="showSection('info')">О нас</span>
   </div>
   <div class="footer-copy">© 2026 OHANA Ивент-кафе · Ансан, Южная Корея 🌊</div>
+
 </footer>
-</div>
+
 
 
 <script>
@@ -1704,6 +1708,9 @@ function showSection(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
   document.getElementById('s-'+id).classList.add('active');
+  // Show footer only on gallery/home
+  const footer = document.getElementById('site-footer');
+  if(footer) footer.style.display = (id==='gallery'||id==='home') ? 'block' : 'none';
   const nl=document.querySelector(`.nav-link[onclick*="'${id}'"]`);
   if(nl)nl.classList.add('active');
   window.scrollTo(0,0);
