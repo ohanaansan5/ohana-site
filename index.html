@@ -859,13 +859,25 @@ nav{
         <input class="form-control" type="text" id="f-contact" placeholder="@username (обязательно для получения QR-билета)">
         <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:700">QR-код придёт сюда после подтверждения оплаты</div>
       </div>
+      <div id="booking-date-time-group" style="display:block">
       <div class="form-row">
         <div class="form-group"><label>Дата</label><input class="form-control" type="date" id="f-date"></div>
         <div class="form-group"><label>Гостей</label><select class="form-control" id="f-guests"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7–10</option><option>10+</option></select></div>
       </div>
-      <div class="form-group"><label>Время</label><div class="time-slots"><button class="time-slot active" onclick="selectTime(this)">12:00</button><button class="time-slot" onclick="selectTime(this)">14:00</button><button class="time-slot" onclick="selectTime(this)">15:00</button><button class="time-slot" onclick="selectTime(this)">17:00</button><button class="time-slot" onclick="selectTime(this)">19:00</button></div></div>
-      <div class="form-group" id="event-select-group" style="display:none"><label>Событие</label><select class="form-control" id="f-event"><option>Акустический вечер</option><option>Бункер (14:00)</option><option>Бункер (19:00)</option><option>Квиз</option><option>Дискотека</option><option>Исторический бал</option><option>Детский МК</option></select></div>
+      <div class="form-group" id="time-free-group"><label>Время прихода</label>
+        <input class="form-control" type="text" id="f-time-free" placeholder="Например: 15:00 или 15:00–17:00" oninput="selectedTime=this.value">
+      </div>
+      <div class="form-group" id="event-select-group" style="display:none">
+        <label>Событие</label>
+        <select class="form-control" id="f-event" onchange="onEventSelect(this)"><option>Акустический вечер</option><option>Бункер (14:00)</option><option>Бункер (19:00)</option><option>Квиз</option><option>Дискотека</option><option>Исторический бал</option><option>Детский МК</option></select></div>
       <div class="form-group"><label>Комментарий</label><textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии..."></textarea></div>
+      <!-- PRE-ORDER DRINKS BUTTON - only for coffee/hall -->
+      <div id="preorder-drinks-btn" style="display:none;margin-bottom:16px">
+        <button type="button" onclick="openPreOrderDrinks()" style="width:100%;padding:12px;background:var(--sand2);border:2px dashed var(--sunset);border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;color:var(--sunset)">
+          ☕ Заказать напитки заранее
+        </button>
+      </div>
+      </div><!-- end booking-date-time-group -->
       <div class="payment-info"><strong>💳 Оплата:</strong> после подтверждения оплаты мы отправим QR-код билета сообщением в Telegram.</div>
 
       <button class="submit-btn" onclick="submitBooking()">Отправить заявку 🌺</button>
@@ -1749,7 +1761,9 @@ const STAFF_GUESTS=[]; // загружается из Supabase
 function showSection(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
-  document.getElementById('s-'+id).classList.add('active');
+  document.getElementById('s-'+id)?.classList.add('active');
+  // Save section for guests
+  if(!staffLoggedIn) localStorage.setItem('ohana_last_section', id);
   // Show footer only on gallery/home
   const footer = document.getElementById('site-footer');
   if(footer) footer.style.display = (id==='gallery'||id==='home') ? 'block' : 'none';
@@ -1758,6 +1772,7 @@ function showSection(id){
   window.scrollTo(0,0);
   document.getElementById('mobile-menu').classList.remove('open');
 }
+
 function go(id){showSection(id);document.getElementById('mobile-menu').classList.remove('open');}
 function toggleMenu(){document.getElementById('mobile-menu').classList.toggle('open');}
 function handleAccountNav(){
@@ -2706,7 +2721,18 @@ function openCart(){
 function selectType(type,el){
   document.querySelectorAll('.booking-type').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');selectedBookingType=type;
-  document.getElementById('event-select-group').style.display=type==='event'?'block':'none';
+  // Event and games: show event selector, hide date/time (taken from event)
+  const isEventType = (type==='event'||type==='games');
+  document.getElementById('event-select-group').style.display = isEventType ? 'block' : 'none';
+  // Date/guests/time only for table and hall (free choice)
+  const showDateFields = (type==='table'||type==='hall');
+  const dateGroup = document.getElementById('booking-date-time-group');
+  if(dateGroup) dateGroup.style.display = showDateFields ? 'block' : 'none';
+  // Pre-order drinks button only for coffee
+  const preorder = document.getElementById('preorder-drinks-btn');
+  if(preorder) preorder.style.display = type==='table' ? 'block' : 'none';
+  // For event/games — populate selector with matching events
+  if(isEventType) populateEventSelector(type);
 }
 function selectTime(btn){
   document.querySelectorAll('.time-slot').forEach(b=>b.classList.remove('active'));
@@ -2716,7 +2742,16 @@ async function submitBooking(){
   const name=document.getElementById('f-name').value.trim();
   const email=document.getElementById('f-email').value.trim()||currentUser?.email||'';
   const contact=document.getElementById('f-contact').value.trim();
-  const date=document.getElementById('f-date').value;
+  let date=document.getElementById('f-date')?.value||'';
+  // For event/games, get date from selected event
+  if(selectedBookingType==='event'||selectedBookingType==='games'){
+    const sel=document.getElementById('f-event');
+    const opt=sel?.options[sel.selectedIndex];
+    if(opt?.dataset.date) date=opt.dataset.date;
+    if(opt?.dataset.time) selectedTime=opt.dataset.time;
+  } else {
+    selectedTime = document.getElementById('f-time-free')?.value||selectedTime||'';
+  }
   const comment=document.getElementById('f-comment').value.trim();
   if(!name||!date){alert('Заполните имя и дату');return;}
   const type=selectedBookingType==='event'?'Билет — '+document.getElementById('f-event').value:selectedBookingType==='hall'?'Аренда зала':selectedBookingType==='games'?'Настольные игры':'Стол';
@@ -3582,7 +3617,12 @@ async function submitCartOrder(payMethod){
     await fetch(botUrl+'/cart-order',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({order_id:code, contact:tg, items:order.items, total, pay_method:payMethod})
+      body:JSON.stringify({
+        order_id:code, contact:tg, items:order.items, total, pay_method:payMethod,
+        arrival_time: window._preOrderContext?.time || '',
+        arrival_date: window._preOrderContext?.date || '',
+        guest_name: window._preOrderContext?.name || tg
+      })
     });
   }catch(e){console.warn('Bot notify error',e);}
 
@@ -3826,7 +3866,15 @@ async function payWithPortOne({amount, orderId, name, buyerName, buyerContact, o
 }
 
 // Initialize on load
-window.addEventListener('load', initPortOne);
+window.addEventListener('load', () => {
+  initPortOne();
+  if(!staffLoggedIn){
+    const last = localStorage.getItem('ohana_last_section');
+    if(last && last !== 'home' && document.getElementById('s-'+last)){
+      showSection(last);
+    }
+  }
+});
 
 // ─── CAMERA QR SCANNER ────────────────────────────
 let cameraStream=null;
@@ -3995,6 +4043,63 @@ function setEditEvTag(btn, tag, cls){
   document.getElementById('edit-ev-tag-cls').value = cls;
   btn.closest('div').querySelectorAll('button').forEach(b=>b.style.background='var(--sand)');
   if(tag) btn.style.background = 'var(--sand2)';
+}
+
+// ─── PRE-ORDER DRINKS FROM BOOKING ────────────────
+function openPreOrderDrinks(){
+  // Save booking context
+  const name = document.getElementById('f-name')?.value.trim() || '';
+  const date = document.getElementById('f-date')?.value || '';
+  const time = selectedTime || '';
+  window._preOrderContext = {name, date, time};
+  // Open cart modal
+  openModal('cart-modal');
+  // Pre-fill TG if known
+  const tgInput = document.getElementById('cart-tg-input');
+  const contact = document.getElementById('f-contact')?.value.trim();
+  if(tgInput && contact) tgInput.value = contact;
+  // Show context note
+  if(date||time){
+    const noteEl = document.querySelector('#cart-step-pay .modal-sub, #cart-step-pay p');
+    if(noteEl) noteEl.textContent = `Придёте ${date} в ${time} — напитки будут готовы!`;
+  }
+}
+
+// ─── BOOKING EVENT SELECTOR ───────────────────────
+function populateEventSelector(type){
+  const sel = document.getElementById('f-event');
+  if(!sel) return;
+  // Filter events by type if needed (games vs events)
+  // For now show all events
+  sel.innerHTML = EVENTS.map(ev=>
+    `<option value="${ev.title}" data-date="${ev.date}" data-time="${ev.time}" data-price="${ev.price_num||0}">
+      ${ev.title} — ${ev.day} ${ev.mon} ${ev.time ? '('+ev.time+')' : ''} ${ev.price_num>0?'· '+ev.price_num.toLocaleString('ru-RU')+' ₩':''}
+    </option>`
+  ).join('');
+  onEventSelect(sel);
+}
+
+function onEventSelect(sel){
+  const opt = sel.options[sel.selectedIndex];
+  if(!opt) return;
+  // Show event date/time info
+  const date = opt.dataset.date || '';
+  const time = opt.dataset.time || '';
+  selectedTime = time;
+  // Show info below selector
+  let info = document.getElementById('event-select-info');
+  if(!info){
+    info = document.createElement('div');
+    info.id = 'event-select-info';
+    info.style.cssText = 'font-size:12px;color:var(--muted);font-weight:700;margin-top:6px;padding:8px 12px;background:var(--sand2);border-radius:8px';
+    sel.parentElement.appendChild(info);
+  }
+  if(date||time){
+    info.textContent = '📅 ' + (date ? new Date(date+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long'}) : '') + (time ? ' · 🕐 ' + time : '');
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
 }
 </script>
 <div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
