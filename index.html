@@ -2730,7 +2730,7 @@ function selectType(type,el){
   if(dateGroup) dateGroup.style.display = showDateFields ? 'block' : 'none';
   // Pre-order drinks button only for coffee
   const preorder = document.getElementById('preorder-drinks-btn');
-  if(preorder) preorder.style.display = type==='table' ? 'block' : 'none';
+  if(preorder) preorder.style.display = (type==='table'||type==='event'||type==='games') ? 'block' : 'none';
   // For event/games — populate selector with matching events
   if(isEventType) populateEventSelector(type);
 }
