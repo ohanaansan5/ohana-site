@@ -388,6 +388,7 @@ body{background:var(--sand);color:var(--text);font-family:'Nunito',sans-serif;mi
 <div class="notif" id="notif"></div>
 
 <script>
+let currentMenuCat = 'all';
 const MENU=[
   {id:'m1',name:'Маленький американо',price:4000,cat:'coffee'},
   {id:'m2',name:'Большой американо',price:5000,cat:'coffee'},
@@ -1186,18 +1187,23 @@ async function clearNote(){
 }
 
 // ─── MENU CATEGORY FILTER ─────────────────────────
-let currentMenuCat = 'all';
-
 function filterMenuCat(cat, btn){
   currentMenuCat = cat;
-  document.querySelectorAll('.cat-filter-btn').forEach(b=>{
-    b.style.background = 'var(--sand)';
-    b.style.color = 'var(--mid)';
-    b.style.borderColor = 'var(--border2)';
-  });
-  btn.style.background = 'var(--sunset)';
-  btn.style.color = '#fff';
-  btn.style.borderColor = 'var(--sunset)';
+  // Reset all filter buttons
+  const filters = document.getElementById('cat-filters');
+  if(filters){
+    filters.querySelectorAll('button').forEach(b=>{
+      b.style.background = 'var(--sand)';
+      b.style.color = 'var(--mid)';
+      b.style.borderColor = 'var(--border2)';
+    });
+  }
+  // Highlight active
+  if(btn){
+    btn.style.background = 'var(--sunset)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--sunset)';
+  }
   renderMenuPanel();
 }
 </script>

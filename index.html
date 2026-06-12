@@ -951,6 +951,7 @@ nav{
       </div>
 
     </div>
+</div>
 
 <!-- AUTH -->
 <div class="section" id="s-auth">
@@ -3485,14 +3486,6 @@ async function choosePayment(method){
           style="display:flex;align-items:center;justify-content:center;gap:8px;background:#229ED9;color:#fff;border-radius:12px;padding:12px;text-decoration:none;font-size:14px;font-weight:900;font-family:'Nunito',sans-serif">
           ✈️ Написать боту @ohana_ansan_bot
         </a>`;
-      try{
-        const resp = await fetch(botUrl+'/payment-method',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({booking_id:bookingId,contact,guest_name:guestName,method:'card',booking_type:bookingType,event_date:eventDate})
-        });
-        if((await resp.json()).ok) notify('📱 Уведомление отправлено!');
-      }catch(e){ notify('⚠️ Бот недоступен'); }
     }
   }
 }
