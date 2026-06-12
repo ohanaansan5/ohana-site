@@ -3289,7 +3289,10 @@ function renderEventsEditor(){
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:2px">${ev.day} ${ev.mon} · ${ev.time} · ${ev.seats} мест · ${ev.price_num>0?ev.price_num.toLocaleString('ru-RU')+' ₩':'Бесплатно'}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px">${ev.desc}</div>
       </div>
-      <button onclick="deleteEvent(${i})" style="padding:6px 12px;background:var(--hibiscus-dim);color:var(--hibiscus);border:1.5px solid var(--hibiscus);border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🗑 Удалить</button>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="editEvent(${i})" style="padding:6px 12px;background:var(--ocean-dim);color:var(--ocean);border:1.5px solid var(--ocean);border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">✏️ Изменить</button>
+        <button onclick="deleteEvent(${i})" style="padding:6px 12px;background:var(--hibiscus-dim);color:var(--hibiscus);border:1.5px solid var(--hibiscus);border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">🗑 Удалить</button>
+      </div>
     </div>`).join('');
 }
 function addEvent(){
@@ -3833,6 +3836,66 @@ function stopCameraScanner(){
   if(btn) btn.style.display='flex';
 }
 
+
+// ─── EVENT EDITING ────────────────────────────────
+let editEvColor = '#E8651A';
+
+function editEvent(idx){
+  const ev = EVENTS[idx];
+  if(!ev) return;
+  document.getElementById('edit-ev-idx').value = idx;
+  document.getElementById('edit-ev-title').value = ev.title || '';
+  document.getElementById('edit-ev-date').value = ev.date || '';
+  document.getElementById('edit-ev-time').value = ev.time || '';
+  document.getElementById('edit-ev-seats').value = ev.seats || 30;
+  document.getElementById('edit-ev-price').value = ev.price_num || 0;
+  document.getElementById('edit-ev-desc').value = ev.desc || '';
+  editEvColor = ev.color || '#E8651A';
+  // Highlight current color
+  document.querySelectorAll('#edit-ev-colors .color-dot').forEach(d=>{
+    d.style.border = d.dataset.color === editEvColor ? '3px solid var(--text)' : '3px solid transparent';
+  });
+  openModal('edit-event-modal');
+}
+
+function selectEditEvColor(el, color){
+  editEvColor = color;
+  document.querySelectorAll('#edit-ev-colors .color-dot').forEach(d=>{
+    d.style.border = '3px solid transparent';
+  });
+  el.style.border = '3px solid var(--text)';
+}
+
+function saveEditedEvent(){
+  const idx = parseInt(document.getElementById('edit-ev-idx').value);
+  const title = document.getElementById('edit-ev-title').value.trim();
+  const date = document.getElementById('edit-ev-date').value;
+  const time = document.getElementById('edit-ev-time').value.trim();
+  const seats = parseInt(document.getElementById('edit-ev-seats').value) || 30;
+  const price = parseInt(document.getElementById('edit-ev-price').value) || 0;
+  const desc = document.getElementById('edit-ev-desc').value.trim();
+
+  if(!title || !date){ alert('Укажите название и дату'); return; }
+
+  const d = new Date(date);
+  const months = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
+
+  EVENTS[idx] = {
+    ...EVENTS[idx],
+    title, date, time, seats, desc,
+    price_num: price,
+    price: price > 0 ? price.toLocaleString('ru-RU') + ' ₩' : 'Бесплатно',
+    color: editEvColor,
+    day: String(d.getDate()).padStart(2,'0'),
+    mon: months[d.getMonth()],
+  };
+
+  localStorage.setItem('ohana_events', JSON.stringify(EVENTS));
+  closeModal('edit-event-modal');
+  renderEventsEditor();
+  renderEventCards();
+  notify('✅ Мероприятие обновлено!');
+}
 </script>
 <div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
 </body>
