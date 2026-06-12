@@ -1621,7 +1621,7 @@ nav{
 
 <script>
 // ═══ DATA ═══════════════════════════════════════════
-const EVENTS=[
+const DEFAULT_EVENTS=[
   {id:'ev1',title:'Акустический вечер',date:'2026-06-13',day:'13',mon:'ИЮН',time:'19:00–22:00',desc:'Открытый микрофон — петь, читать стихи, играть. Без давления.',price:'Бесплатно + заказ',price_num:0,color:'#5C4E8A',tag:'Каждую пятницу',tagCls:'tag-blue',seats:30},
   {id:'ev2',title:'Бункер — психологическая игра',date:'2026-06-20',day:'20',mon:'ИЮН',time:'14:00 и 19:00',desc:'Ролевая игра на выживание. Группы 8–12 человек. Запись обязательна.',price:'12 000 ₩',price_num:12000,color:'#4A7C59',tag:'2-я суббота',tagCls:'tag-green',seats:12},
   {id:'ev3',title:'Дискотека: 90-е & 2000-е',date:'2026-06-27',day:'27',mon:'ИЮН',time:'19:00–23:00',desc:'Тематическая вечеринка без алкоголя. Диджей Вика за пультом.',price:'15 000 ₩',price_num:15000,color:'#9E4A6E',tag:'3-я суббота',tagCls:'tag-rose',seats:60},
@@ -1629,6 +1629,21 @@ const EVENTS=[
   {id:'ev5',title:'Исторический бал',date:'2026-07-11',day:'11',mon:'ИЮЛ',time:'17:00–23:00',desc:'Вальс, мазурка, полонез со сменой партнёров. Дресс-код обязателен. 16+.',price:'25 000 ₩',price_num:25000,color:'#B85E7A',tag:'16+',tagCls:'tag-rose',seats:30},
   {id:'ev6',title:'Детский МК: лепка',date:'2026-07-05',day:'5',mon:'ИЮЛ',time:'14:30–16:30',desc:'Лепка из глины для детей 5–12 лет. Материалы включены.',price:'18 000 ₩',price_num:18000,color:'#C4633A',tag:'Воскресенье',tagCls:'tag-orange',seats:15},
 ];
+// Load events from localStorage (user edits) or use defaults
+let EVENTS = (() => {
+  try {
+    const saved = localStorage.getItem('ohana_events');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed && parsed.length > 0){
+        // Use saved events as-is (user's version is authoritative)
+        return parsed.sort((a,b)=>new Date(a.date)-new Date(b.date));
+      }
+    }
+  } catch(e){ console.warn('Events load error:', e); }
+  return [...DEFAULT_EVENTS];
+})();
+
 const MENU=[
   {id:'m1',name:'Маленький американо',desc:'Горячий, 150 мл',price:4000,cat:'coffee'},
   {id:'m2',name:'Большой американо',desc:'Горячий, 300 мл',price:5000,cat:'coffee'},
@@ -1703,9 +1718,10 @@ const BOOKINGS=[];
 let currentUser=null, staffLoggedIn=false, pinInput='', currentStaff=null, selectedPayMethod='card';
 let selectedBookingType='games', selectedTime='', selectedSlot=null;
 const STAFF = [
-  {pin:'831207', name:'Сергей',  role:'Персонал'},
-  {pin:'901207', name:'Катя',    role:'Персонал'},
-  {pin:'970625', name:'Катя',    role:'Персонал'},
+  {pin:'881207', name:'Сергей',        role:'Персонал'},
+  {pin:'901207', name:'Катя',          role:'Персонал'},
+  {pin:'970625', name:'Катя',          role:'Персонал'},
+  {pin:'831231', name:'Александр Ким', role:'Персонал'},
 ];
 function makeCode(p){return p+'-'+Math.random().toString(36).substr(2,6).toUpperCase();}
 
@@ -3195,7 +3211,7 @@ function showSaved(id){
     localStorage.removeItem('ohana_user');
   }
 })();
-loadSavedEvents();
+// events loaded at init
 applySettingsToPage();
 renderPublicGallery();
 syncMenuFromDB();
@@ -3337,7 +3353,7 @@ function addEvent(){
   EVENTS.push(newEv);
   EVENTS.sort((a,b)=>new Date(a.date)-new Date(b.date));
   // Save to localStorage
-  localStorage.setItem('ohana_events',JSON.stringify(EVENTS.filter(e=>e.id.startsWith('ev'))));
+  localStorage.setItem('ohana_events',JSON.stringify(EVENTS));
   renderEvents();
   renderEventsEditor();
   populateOnsiteEvents();
@@ -3350,23 +3366,12 @@ function addEvent(){
 function deleteEvent(i){
   if(!confirm('Удалить «'+EVENTS[i].title+'»?'))return;
   EVENTS.splice(i,1);
-  localStorage.setItem('ohana_events',JSON.stringify(EVENTS.filter(e=>e.id.startsWith('ev'))));
+  localStorage.setItem('ohana_events',JSON.stringify(EVENTS));
   renderEvents();
   renderEventsEditor();
   notify('🗑 Мероприятие удалено');
 }
-function loadSavedEvents(){
-  const saved=localStorage.getItem('ohana_events');
-  if(saved){
-    const extra=JSON.parse(saved);
-    extra.forEach(ev=>{if(!EVENTS.find(e=>e.id===ev.id))EVENTS.push(ev);});
-    EVENTS.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  }
-}
-
-
-// ─── MENU PHOTO ───────────────────────────────────
-let newMenuPhotoData = null;
+// loadSavedEvents() replaced by EVENTS init above
 
 function previewMenuPhoto(input){
   if(!input.files||!input.files[0])return;
@@ -3921,7 +3926,7 @@ function saveEditedEvent(){
     image: editImage,
   };
 
-  localStorage.setItem('ohana_events', JSON.stringify(EVENTS.filter(e=>e.id.startsWith('ev'))));
+  localStorage.setItem('ohana_events', JSON.stringify(EVENTS));
   closeModal('edit-event-modal');
   renderEventsEditor();
   renderEvents();
