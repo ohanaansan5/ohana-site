@@ -867,9 +867,13 @@ nav{
       <div class="form-group" id="time-free-group"><label>Время прихода</label>
         <input class="form-control" type="text" id="f-time-free" placeholder="Например: 15:00 или 15:00–17:00" oninput="selectedTime=this.value">
       </div>
-      <div class="form-group" id="event-select-group" style="display:none">
-        <label>Событие</label>
-        <select class="form-control" id="f-event" onchange="onEventSelect(this)"><option>Акустический вечер</option><option>Бункер (14:00)</option><option>Бункер (19:00)</option><option>Квиз</option><option>Дискотека</option><option>Исторический бал</option><option>Детский МК</option></select></div>
+      <div id="event-select-group" style="display:none">
+        <div class="form-group">
+          <label>Выберите мероприятие</label>
+          <select class="form-control" id="f-event" onchange="onEventSelect(this)"></select>
+          <div id="event-select-info" style="display:none;font-size:12px;color:var(--muted);font-weight:700;margin-top:6px;padding:8px 12px;background:var(--sand2);border-radius:8px"></div>
+        </div>
+      </div>
       <div class="form-group"><label>Комментарий</label><textarea class="form-control" id="f-comment" rows="2" placeholder="Пожелания, аллергии..."></textarea></div>
       </div><!-- end booking-date-time-group -->
       <!-- PRE-ORDER DRINKS BUTTON -->
@@ -1345,6 +1349,17 @@ nav{
           </div>
           <div class="form-row">
             <div class="form-group"><label>Время</label><input class="form-control" type="text" id="ev-time" placeholder="19:00–22:00"></div>
+          <div class="form-group">
+            <label>Тип мероприятия</label>
+            <div style="display:flex;gap:8px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;cursor:pointer;padding:8px 14px;background:var(--sand2);border:1.5px solid var(--border);border-radius:8px;flex:1">
+                <input type="radio" name="ev-type-radio" id="ev-type-event" value="event" checked> 🎭 Событие
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;cursor:pointer;padding:8px 14px;background:var(--sand2);border:1.5px solid var(--border);border-radius:8px;flex:1">
+                <input type="radio" name="ev-type-radio" id="ev-type-games" value="games"> 🎲 Настольные игры
+              </label>
+            </div>
+          </div>
             <div class="form-group"><label>Мест максимум</label><input class="form-control" type="number" id="ev-seats" placeholder="30" min="1"></div>
           </div>
           <div class="form-group"><label>Описание</label><textarea class="form-control" id="ev-desc" rows="2" placeholder="Краткое описание для гостей..."></textarea></div>
@@ -1647,7 +1662,7 @@ nav{
 <script>
 // ═══ DATA ═══════════════════════════════════════════
 const DEFAULT_EVENTS=[
-  {id:'ev1',title:'Акустический вечер',date:'2026-06-13',day:'13',mon:'ИЮН',time:'19:00–22:00',desc:'Открытый микрофон — петь, читать стихи, играть. Без давления.',price:'Бесплатно + заказ',price_num:0,color:'#5C4E8A',tag:'Каждую пятницу',tagCls:'tag-blue',seats:30},
+  {id:'ev1',title:'Акустический вечер',date:'2026-06-13',day:'13',mon:'ИЮН',time:'19:00–22:00',desc:'Открытый микрофон — петь, читать стихи, играть. Без давления.',price:'Бесплатно + заказ',price_num:0,color:'#5C4E8A',tag:'Каждую пятницу',tagCls:'tag-blue',seats:30,evType:'event'},
   {id:'ev2',title:'Бункер — психологическая игра',date:'2026-06-20',day:'20',mon:'ИЮН',time:'14:00 и 19:00',desc:'Ролевая игра на выживание. Группы 8–12 человек. Запись обязательна.',price:'12 000 ₩',price_num:12000,color:'#4A7C59',tag:'2-я суббота',tagCls:'tag-green',seats:12},
   {id:'ev3',title:'Дискотека: 90-е & 2000-е',date:'2026-06-27',day:'27',mon:'ИЮН',time:'19:00–23:00',desc:'Тематическая вечеринка без алкоголя. Диджей Вика за пультом.',price:'15 000 ₩',price_num:15000,color:'#9E4A6E',tag:'3-я суббота',tagCls:'tag-rose',seats:60},
   {id:'ev4',title:'Квиз',date:'2026-06-28',day:'28',mon:'ИЮН',time:'14:30–17:00',desc:'Командная викторина. K-pop, Корея, история, поп-культура.',price:'7 000 ₩',price_num:7000,color:'#9A7B3A',tag:'4-е воскресенье',tagCls:'tag-gold',seats:50},
@@ -2732,7 +2747,7 @@ function selectType(type,el){
   const preorder = document.getElementById('preorder-drinks-btn');
   if(preorder) preorder.style.display = (type==='table'||type==='event'||type==='games') ? 'block' : 'none';
   // For event/games — populate selector with matching events
-  if(isEventType) populateEventSelector(type);
+  if(isEventType) populateEventSelector(type); // type='event' or 'games'
 }
 function selectTime(btn){
   document.querySelectorAll('.time-slot').forEach(b=>b.classList.remove('active'));
@@ -3366,7 +3381,7 @@ function renderEventsEditor(){
       <div style="width:8px;height:8px;border-radius:50%;background:${ev.color};flex-shrink:0;margin-top:6px"></div>
       <div style="flex:1">
         ${ev.image?`<img src="${ev.image}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:8px" alt="">`:'' }
-        <div style="font-size:14px;font-weight:800;color:var(--text)">${ev.title}</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text)">${ev.title} <span style="font-size:11px;font-weight:700;color:var(--muted)">${ev.evType==='games'?'🎲 Игры':'🎭 Событие'}</span></div>
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:2px">${ev.day} ${ev.mon} · ${ev.time} · ${ev.seats} мест · ${ev.price_num>0?ev.price_num.toLocaleString('ru-RU')+' ₩':'Бесплатно'}</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px">${ev.desc}</div>
       </div>
@@ -3385,6 +3400,7 @@ function addEvent(){
   const price=parseInt(document.getElementById('ev-price').value)||0;
   const image=document.getElementById('ev-image')?.value.trim()||'';
   const color=selectedEvColor;
+  const evType=(document.querySelector('input[name="ev-type-radio"]:checked')?.value)||'event';
   const tag=(document.getElementById('ev-tag')?.value.trim())||'';
   const tagCls=(document.getElementById('ev-tag-cls')?.value)||'tag-orange';
   if(!title||!date){alert('Укажи название и дату');return;}
@@ -3398,7 +3414,7 @@ function addEvent(){
     desc:desc||'Подробности скоро',
     price:price>0?price.toLocaleString('ru-RU')+' ₩':'Бесплатно + заказ',
     price_num:price,color,
-    tag:tag||'',tagCls:tagCls||'tag-orange',seats,image
+    tag:tag||'',tagCls:tagCls||'tag-orange',seats,image,evType
   };
   EVENTS.push(newEv);
   EVENTS.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -3406,6 +3422,7 @@ function addEvent(){
   localStorage.setItem('ohana_events',JSON.stringify(EVENTS));
   renderEvents();
   renderEventsEditor();
+  populateEventSelector('event');
   populateOnsiteEvents();
   // Reset form
   ['ev-title','ev-date','ev-time','ev-seats','ev-desc','ev-price'].forEach(id=>{
@@ -3419,6 +3436,7 @@ function deleteEvent(i){
   localStorage.setItem('ohana_events',JSON.stringify(EVENTS));
   renderEvents();
   renderEventsEditor();
+  populateEventSelector('event');
   notify('🗑 Мероприятие удалено');
 }
 // loadSavedEvents() replaced by EVENTS init above
@@ -3940,6 +3958,9 @@ function editEvent(idx){
   set('edit-ev-desc', ev.desc||'');
   set('edit-ev-image', ev.image||'');
   set('edit-ev-tag', ev.tag||'');
+  // Set type radio
+  const typeRadios = document.querySelectorAll('input[name="edit-ev-type"]');
+  typeRadios.forEach(r => r.checked = r.value === (ev.evType||'event'));
   const tagClsEl=document.getElementById('edit-ev-tag-cls'); if(tagClsEl) tagClsEl.value=ev.tagCls||'tag-orange';
   // Show image preview if exists
   if(ev.image){
@@ -3979,6 +4000,7 @@ function saveEditedEvent(){
   const d = new Date(date);
   const months = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
 
+  const editEvType = document.querySelector('input[name="edit-ev-type"]:checked')?.value || EVENTS[idx].evType || 'event';
   const editImage = document.getElementById('edit-ev-image')?.value.trim()||EVENTS[idx].image||'';
   const editTag = document.getElementById('edit-ev-tag')?.value.trim()??EVENTS[idx].tag??'';
   const editTagCls = document.getElementById('edit-ev-tag-cls')?.value||EVENTS[idx].tagCls||'tag-orange';
@@ -3991,6 +4013,7 @@ function saveEditedEvent(){
     day: String(d.getDate()).padStart(2,'0'),
     mon: months[d.getMonth()],
     image: editImage,
+    evType: editEvType,
     tag: editTag,
     tagCls: editTagCls,
   };
@@ -3999,6 +4022,7 @@ function saveEditedEvent(){
   closeModal('edit-event-modal');
   renderEventsEditor();
   renderEvents();
+  populateEventSelector('event');
   // Update booking form event selector
   const fEvent = document.getElementById('f-event');
   if(fEvent){
@@ -4069,12 +4093,18 @@ function openPreOrderDrinks(){
 function populateEventSelector(type){
   const sel = document.getElementById('f-event');
   if(!sel) return;
-  // Filter events by type if needed (games vs events)
-  // For now show all events
-  sel.innerHTML = EVENTS.map(ev=>
-    `<option value="${ev.title}" data-date="${ev.date}" data-time="${ev.time}" data-price="${ev.price_num||0}">
-      ${ev.title} — ${ev.day} ${ev.mon} ${ev.time ? '('+ev.time+')' : ''} ${ev.price_num>0?'· '+ev.price_num.toLocaleString('ru-RU')+' ₩':''}
-    </option>`
+  if(!EVENTS || !EVENTS.length){
+    sel.innerHTML = '<option value="">Нет мероприятий — добавьте в панели персонала</option>';
+    return;
+  }
+  const filtered = EVENTS.filter(ev => (ev.evType||'event') === type);
+  if(!filtered.length){
+    const label = type==='games' ? 'настольных игр' : 'событий';
+    sel.innerHTML = `<option value="">Нет ${label} — добавьте в мероприятиях</option>`;
+    return;
+  }
+  sel.innerHTML = filtered.map(ev=>
+    `<option value="${ev.title}" data-date="${ev.date}" data-time="${ev.time}" data-price="${ev.price_num||0}">${ev.title} — ${ev.day} ${ev.mon}${ev.time?' ('+ev.time+')':''} ${ev.price_num>0?'· '+ev.price_num.toLocaleString('ru-RU')+' ₩':''}</option>`
   ).join('');
   onEventSelect(sel);
 }
@@ -4150,6 +4180,17 @@ function onEventSelect(sel){
         <input id="edit-ev-tag" type="text" placeholder="Или введите свой текст..." maxlength="30"
           style="width:100%;background:var(--sand);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text);outline:none;box-sizing:border-box">
         <input type="hidden" id="edit-ev-tag-cls" value="tag-orange">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px">Тип</label>
+        <div style="display:flex;gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer;padding:7px 12px;background:var(--sand2);border:1.5px solid var(--border);border-radius:8px;flex:1">
+            <input type="radio" name="edit-ev-type" value="event"> 🎭 Событие
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer;padding:7px 12px;background:var(--sand2);border:1.5px solid var(--border);border-radius:8px;flex:1">
+            <input type="radio" name="edit-ev-type" value="games"> 🎲 Настольные игры
+          </label>
+        </div>
       </div>
       <div>
         <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Описание</label>
