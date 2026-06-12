@@ -1351,6 +1351,19 @@ nav{
           </div>
           <div class="form-row">
             <div class="form-group"><label>Цена (₩, 0 = бесплатно)</label><input class="form-control" type="number" id="ev-price" placeholder="0" min="0"></div>
+          <div class="form-group">
+            <label>Плашка (например: Каждую пятницу)</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+              <button type="button" onclick="setEvTag(this,'Каждую пятницу','tag-blue')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждую пятницу</button>
+              <button type="button" onclick="setEvTag(this,'Каждую субботу','tag-green')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждую субботу</button>
+              <button type="button" onclick="setEvTag(this,'Каждое воскресенье','tag-orange')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждое воскресенье</button>
+              <button type="button" onclick="setEvTag(this,'16+','tag-rose')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">16+</button>
+              <button type="button" onclick="setEvTag(this,'18+','tag-rose')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">18+</button>
+              <button type="button" onclick="setEvTag(this,'','tag-orange')" style="padding:4px 10px;border-radius:99px;border:1.5px dashed var(--border);background:transparent;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--muted)">✕ Без плашки</button>
+            </div>
+            <input class="form-control" type="text" id="ev-tag" placeholder="Или введите свой текст..." maxlength="30">
+            <input type="hidden" id="ev-tag-cls" value="tag-orange">
+          </div>
             <div class="form-group"><label>Цвет метки</label>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
                 <div class="color-swatch active" style="background:#E8651A;width:32px;height:32px" onclick="selectEvColor('#E8651A',this)"></div>
@@ -3337,6 +3350,8 @@ function addEvent(){
   const price=parseInt(document.getElementById('ev-price').value)||0;
   const image=document.getElementById('ev-image')?.value.trim()||'';
   const color=selectedEvColor;
+  const tag=(document.getElementById('ev-tag')?.value.trim())||'';
+  const tagCls=(document.getElementById('ev-tag-cls')?.value)||'tag-orange';
   if(!title||!date){alert('Укажи название и дату');return;}
   const d=new Date(date);
   const months=['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
@@ -3348,7 +3363,7 @@ function addEvent(){
     desc:desc||'Подробности скоро',
     price:price>0?price.toLocaleString('ru-RU')+' ₩':'Бесплатно + заказ',
     price_num:price,color,
-    tag:'',tagCls:'tag-orange',seats
+    tag:tag||'',tagCls:tagCls||'tag-orange',seats,image
   };
   EVENTS.push(newEv);
   EVENTS.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -3876,6 +3891,8 @@ function editEvent(idx){
   set('edit-ev-price', ev.price_num||0);
   set('edit-ev-desc', ev.desc||'');
   set('edit-ev-image', ev.image||'');
+  set('edit-ev-tag', ev.tag||'');
+  const tagClsEl=document.getElementById('edit-ev-tag-cls'); if(tagClsEl) tagClsEl.value=ev.tagCls||'tag-orange';
   // Show image preview if exists
   if(ev.image){
     const prev = document.getElementById('edit-ev-img-preview');
@@ -3915,6 +3932,8 @@ function saveEditedEvent(){
   const months = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК'];
 
   const editImage = document.getElementById('edit-ev-image')?.value.trim()||EVENTS[idx].image||'';
+  const editTag = document.getElementById('edit-ev-tag')?.value.trim()??EVENTS[idx].tag??'';
+  const editTagCls = document.getElementById('edit-ev-tag-cls')?.value||EVENTS[idx].tagCls||'tag-orange';
   EVENTS[idx] = {
     ...EVENTS[idx],
     title, date, time, seats, desc,
@@ -3924,6 +3943,8 @@ function saveEditedEvent(){
     day: String(d.getDate()).padStart(2,'0'),
     mon: months[d.getMonth()],
     image: editImage,
+    tag: editTag,
+    tagCls: editTagCls,
   };
 
   localStorage.setItem('ohana_events', JSON.stringify(EVENTS));
@@ -3958,6 +3979,22 @@ function previewEvImage(input, urlFieldId, previewId){
     }
   };
   reader.readAsDataURL(file);
+}
+
+// ─── EVENT TAG HELPERS ─────────────────────────────
+function setEvTag(btn, tag, cls){
+  document.getElementById('ev-tag').value = tag;
+  document.getElementById('ev-tag-cls').value = cls;
+  // Highlight selected button
+  btn.closest('div').querySelectorAll('button').forEach(b=>b.style.background='var(--sand)');
+  if(tag) btn.style.background = 'var(--sand2)';
+}
+
+function setEditEvTag(btn, tag, cls){
+  document.getElementById('edit-ev-tag').value = tag;
+  document.getElementById('edit-ev-tag-cls').value = cls;
+  btn.closest('div').querySelectorAll('button').forEach(b=>b.style.background='var(--sand)');
+  if(tag) btn.style.background = 'var(--sand2)';
 }
 </script>
 <div id="notif" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--palm);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:800;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap"></div>
@@ -3994,6 +4031,20 @@ function previewEvImage(input, urlFieldId, previewId){
           <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Цена ₩</label>
           <input id="edit-ev-price" type="number" class="form-input" placeholder="0 = бесплатно" style="width:100%;box-sizing:border-box">
         </div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px">Плашка</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <button type="button" onclick="setEditEvTag(this,'Каждую пятницу','tag-blue')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждую пятницу</button>
+          <button type="button" onclick="setEditEvTag(this,'Каждую субботу','tag-green')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждую субботу</button>
+          <button type="button" onclick="setEditEvTag(this,'Каждое воскресенье','tag-orange')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Каждое воскресенье</button>
+          <button type="button" onclick="setEditEvTag(this,'16+','tag-rose')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">16+</button>
+          <button type="button" onclick="setEditEvTag(this,'18+','tag-rose')" style="padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);background:var(--sand);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">18+</button>
+          <button type="button" onclick="setEditEvTag(this,'','tag-orange')" style="padding:4px 10px;border-radius:99px;border:1.5px dashed var(--border);background:transparent;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--muted)">✕ Убрать</button>
+        </div>
+        <input id="edit-ev-tag" type="text" placeholder="Или введите свой текст..." maxlength="30"
+          style="width:100%;background:var(--sand);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text);outline:none;box-sizing:border-box">
+        <input type="hidden" id="edit-ev-tag-cls" value="tag-orange">
       </div>
       <div>
         <label style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px">Описание</label>
